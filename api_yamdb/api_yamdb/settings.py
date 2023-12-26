@@ -18,7 +18,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'rest_framework_simplejwt',
-    'django_filters', 
+    'django_filters',
     'api.apps.ApiConfig',
     'reviews.apps.ReviewsConfig',
 ]
@@ -95,5 +95,9 @@ AUTH_USER_MODEL = 'reviews.User'
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
-    )
+    ),
+    'DEFAULT_FILTER_BACKENDS': [
+        'django_filters.rest_framework.DjangoFilterBackend',
+        'rest_framework.filters.OrderingFilter',
+    ]
 }

@@ -1,8 +1,13 @@
+from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import mixins, viewsets
 from rest_framework.filters import SearchFilter
 
+from permissions import AdminOrReadOnly
 from reviews.models import Category, Genre, Title
-from serializers import CategorySerializer, GenreSerializer, TitleSerializer
+from serializers import (
+    CategorySerializer, GenreSerializer,
+    TitleGetSerializer, TitleEditSerializer
+)
 
 
 class GenreCategoryMixin(
@@ -15,41 +20,34 @@ class GenreCategoryMixin(
 
     filter_backends = (SearchFilter,)
     search_fields = ('name',)
-    # добавить пермишен - админ или только чтение
-    # permission_classes = (IsAdminOrReadOnly,)
-
-
-class TitleViewSet(viewsets.ModelViewSet):
-    """
-    Вьюсет для произведений.
-    """
-    # добавить в кверисет среднее значение через annotate
-    queryset = Title.objects.annotate(rating=7)  # вместо 7 - AVG
-    serializer_class = TitleSerializer
-    filterset_fields = ('name',)
-    ordering = ('name',)
-    # добавить пермишен: админ или только чтение
-    # permission_classes = (IsAdminOrReadOnly,)
-
-    def get_serializer_class(self):
-        if self.request.method == 'GET':
-            return TitleSerializer
-        return TitleSerializer
+    permission_classes = (AdminOrReadOnly,)
 
 
 class GenreViewSet(GenreCategoryMixin):
-    """
-    Вьюсет для жанров.
-    """
+    """Вьюсет для жанров."""
 
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
 
 
 class CategoriesViewSet(GenreCategoryMixin):
-    """
-    Вьюсет для категорий.
-    """
+    """Вьюсет для категорий."""
 
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
+
+
+class TitleViewSet(viewsets.ModelViewSet):
+    """Вьюсет для произведений."""
+
+    # добавить в кверисет среднее значение через annotate
+    queryset = Title.objects.annotate(rating=7)  # вместо 7 - AVG
+    filter_backends = (DjangoFilterBackend,)
+    filterset_fields = ('name', 'category__slug', 'genre__slug', 'year')
+    ordering = ('name',)
+    permission_classes = (AdminOrReadOnly,)
+
+    def get_serializer_class(self):
+        if self.request.method == 'GET':
+            return TitleGetSerializer
+        return TitleEditSerializer
