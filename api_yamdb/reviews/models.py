@@ -121,3 +121,62 @@ class User(AbstractUser):
         null=True,
         verbose_name='Код подтверждения',
     )
+
+class Review(models.Model):
+    """Модель отзывов."""
+    author = models.ForeignKey(
+        User,
+        related_name='reviews',
+        on_delete=models.CASCADE,
+        verbose_name='Автор отзыва',
+    )
+    title = models.ForeignKey(
+        Title,
+        on_delete=models.CASCADE,
+        related_name='reviews',
+        verbose_name='Произведение для отзыва'
+    )
+    text = models.TextField('Ваш отзыв')
+    pub_date = models.DateTimeField(
+        'Дата публикации',
+        auto_now_add=True,
+    )
+    
+    class Meta:
+        verbose_name = 'Отзыв'
+        verbose_name_plural = 'Отзывы'
+        ordering = ['-pub_date']
+
+    def __str__(self):
+        return self.text[:15]    
+
+
+class Comments(models.Model):
+    """Модель для комментариев."""
+    author = models.ForeignKey(
+        User,
+        related_name='comments',
+        verbose_name='Автор комментария',
+        on_delete=models.CASCADE
+    )
+    review = models.ForeignKey(
+        Review,
+        related_name='comments',
+        on_delete=models.CASCADE,
+        verbose_name='Комментируемый отзыв'
+    )
+    text = models.TextField('Ваш комментарий')
+    pub_date = models.DateTimeField(
+        'Дата комментария',
+        auto_now_add=True,
+    )
+
+    class Meta:
+        verbose_name = 'Комментарий'
+        verbose_name_plural = 'Комментарии'
+        ordering = ['-pub_date']
+
+    def __str__(self):
+        return self.text[:15]
+
+        
