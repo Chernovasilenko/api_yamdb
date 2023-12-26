@@ -1,4 +1,13 @@
+from django.contrib.auth.models import AbstractUser
 from django.db import models
+
+
+ROLES = [
+    ('anonymous', 'Аноним'),
+    ('user', 'Пользователь'),
+    ('moderator', 'Модератор'),
+    ('admin', 'Администратор'),
+]
 
 
 class Genre(models.Model):
@@ -74,3 +83,41 @@ class Title(models.Model):
 
     def __str__(self):
         return self.name
+
+
+class User(AbstractUser):
+    """Модель кастомных пользователей."""
+
+    first_name = models.CharField(
+        max_length=100,
+        blank=True,
+        verbose_name='Имя',
+    )
+    last_name = models.CharField(
+        max_length=100,
+        blank=True,
+        verbose_name='Фамилия',
+    )
+    bio = models.TextField(
+        max_length=254,
+        blank=True,
+        null=True,
+        verbose_name='Биография',
+    )
+    email = models.EmailField(
+        max_length=254,
+        unique=True,
+        verbose_name='Электронная почта',
+    )
+    role = models.CharField(
+        max_length=100,
+        choices=ROLES,
+        default='user',
+        verbose_name='Роль',
+    )
+    confirmation_code = models.CharField(
+        max_length=100,
+        blank=True,
+        null=True,
+        verbose_name='Код подтверждения',
+    )
