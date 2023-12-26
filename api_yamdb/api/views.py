@@ -1,26 +1,15 @@
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import mixins, viewsets
-from rest_framework.filters import SearchFilter
+from rest_framework import viewsets
 
-from permissions import AdminOrReadOnly
-from reviews.models import Category, Genre, Title
-from serializers import (
+from .filters import TitleFilter
+from .mixins import GenreCategoryMixin
+from .permissions import AdminOrReadOnly
+from .serializers import (
     CategorySerializer, GenreSerializer,
     TitleGetSerializer, TitleEditSerializer
 )
+from reviews.models import Category, Genre, Title
 
-
-class GenreCategoryMixin(
-    mixins.CreateModelMixin,
-    mixins.ListModelMixin,
-    mixins.DestroyModelMixin,
-    viewsets.GenericViewSet,
-):
-    """Миксин для жанров и категорий."""
-
-    filter_backends = (SearchFilter,)
-    search_fields = ('name',)
-    permission_classes = (AdminOrReadOnly,)
 
 
 class GenreViewSet(GenreCategoryMixin):
@@ -30,7 +19,7 @@ class GenreViewSet(GenreCategoryMixin):
     serializer_class = GenreSerializer
 
 
-class CategoriesViewSet(GenreCategoryMixin):
+class CategoryViewSet(GenreCategoryMixin):
     """Вьюсет для категорий."""
 
     queryset = Category.objects.all()
@@ -41,13 +30,16 @@ class TitleViewSet(viewsets.ModelViewSet):
     """Вьюсет для произведений."""
 
     # добавить в кверисет среднее значение через annotate
-    queryset = Title.objects.annotate(rating=7)  # вместо 7 - AVG
+    # queryset = Title.objects.annotate(rating=7)  # вместо 7 - AVG
+    queryset = Title.objects.all()
     filter_backends = (DjangoFilterBackend,)
-    filterset_fields = ('name', 'category__slug', 'genre__slug', 'year')
+    filterset_class = TitleFilter
     ordering = ('name',)
     permission_classes = (AdminOrReadOnly,)
 
     def get_serializer_class(self):
+        """Выбор сериализатора в зависимости от типа запроса."""
+
         if self.request.method == 'GET':
             return TitleGetSerializer
         return TitleEditSerializer
