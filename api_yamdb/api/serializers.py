@@ -1,11 +1,62 @@
-from django.contrib.auth import get_user_model
+from django.core.validators import RegexValidator
 from django.utils import timezone
 from rest_framework import serializers
 
 from core import constants
-from reviews.models import Category, Genre, Title
+from reviews.models import Category, Comments, Genre, Title, User, Review
 
-User = get_user_model()
+
+class UserSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = User
+        fields = (
+            'username',
+            'email',
+            'first_name',
+            'last_name',
+            'role',
+        )
+
+
+class CreateUserSerializer(serializers.ModelSerializer):
+    username = serializers.CharField(required=True)
+    email = serializers.EmailField(required=True)
+
+    class Meta:
+        model = User
+        fields = (
+            'username',
+            'email',
+            'first_name',
+            'last_name',
+            'role',
+        )
+        validators = [
+            RegexValidator(
+                regex=r'^[\w.@+-]+$',
+                message=(
+                    'Недопустимые символы в имени пользователя!'
+                )
+            )
+        ]
+
+    def validate_new_user(self, data):
+        if User.objects.filter(username=data['username']).exists():
+            raise serializers.ValidationError(
+                'Пользователь с таким именем уже существует.'
+            )
+        return data
+
+    # Нужна ли здесь проверка на уникальность email?
+    # На мой взгляд мы должны предусмотреть создание пользователя
+    # с уникальным email.
+    def validate(self, data):
+        if User.objects.filter(email=data['email']).exists():
+            raise serializers.ValidationError(
+                'Пользователь с таким email уже существует.'
+            )
+        return data
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -57,9 +108,7 @@ class TitleEditSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Title
-        fields = (
-            'id', 'name', 'description', 'year', 'genre', 'category', 'rating'
-        )
+        fields = ('id', 'name', 'description', 'year', 'genre', 'category',)
 
     def validate_year(self, value):
         """Проверка допустимости значения года."""
@@ -73,3 +122,27 @@ class TitleEditSerializer(serializers.ModelSerializer):
                 'Год произведения не может быть ниже 1!'
             )
         return value
+
+
+class CommentSerializer(serializers.ModelSerializer):
+    """Сериализатор комментариев."""
+    author = serializers.SlugRelatedField(
+        read_only=True, slug_field='username'
+    )
+
+    class Meta:
+        fields = '__all__'
+        model = Comments
+        read_only_fields = ('review', 'author')
+
+
+class ReviewSerializer(serializers.ModelSerializer):
+    """Сериализатор отзывов."""
+    author = serializers.SlugRelatedField(
+        read_only=True, slug_field='username'
+    )
+
+    class Meta:
+        fields = '__all__'
+        model = Review
+        read_only_fields = ('title', 'author')

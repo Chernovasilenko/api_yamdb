@@ -1,9 +1,10 @@
 from django.contrib.auth.models import AbstractUser
-from django.db import models
 from django.core.validators import MaxValueValidator, MinValueValidator
+from django.db import models
 from django.utils import timezone
 
 from core import constants
+from reviews.mixins import CommentReviewAbstractModel
 
 
 ROLES = [
@@ -27,16 +28,14 @@ class User(AbstractUser):
         blank=True,
         verbose_name='Фамилия',
     )
-    bio = models.TextField(
-        max_length=254,
-        blank=True,
-        null=True,
-        verbose_name='Биография',
-    )
     email = models.EmailField(
         max_length=254,
         unique=True,
         verbose_name='Электронная почта',
+    )
+    bio = models.TextField(
+        blank=True,
+        verbose_name='Биография',
     )
     role = models.CharField(
         max_length=100,
@@ -50,6 +49,9 @@ class User(AbstractUser):
         null=True,
         verbose_name='Код подтверждения',
     )
+
+    def __str__(self):
+        return self.username
 
 
 class AbstractModelGenreCategory(models.Model):
@@ -134,3 +136,51 @@ class Title(models.Model):
 
     def __str__(self):
         return self.name[:constants.MAX_TITLE_LENGTH]
+
+
+class Review(CommentReviewAbstractModel):
+    """Модель отзывов."""
+
+    title = models.ForeignKey(
+        Title,
+        on_delete=models.CASCADE,
+        related_name='reviews',
+        verbose_name='Произведение для отзыва'
+    )
+    score = models.PositiveSmallIntegerField(
+        validators=[
+            MinValueValidator(1, message='Оценка должна быть больше 1'),
+            MaxValueValidator(10, message='Оценка должна быть до 10'),
+        ],
+        verbose_name='Рейтинг',
+    )
+
+    class Meta:
+        verbose_name = 'Отзыв'
+        verbose_name_plural = 'Отзывы'
+        ordering = ['-pub_date']
+        constraints = [
+            models.UniqueConstraint(
+                fields=["author", "title"], name="unique_review")]
+
+    def __str__(self):
+        return self.text[:15]
+
+
+class Comments(CommentReviewAbstractModel):
+    """Модель для комментариев."""
+
+    review = models.ForeignKey(
+        Review,
+        related_name='comments',
+        on_delete=models.CASCADE,
+        verbose_name='Комментируемый отзыв'
+    )
+
+    class Meta:
+        verbose_name = 'Комментарий'
+        verbose_name_plural = 'Комментарии'
+        ordering = ['-pub_date']
+
+    def __str__(self):
+        return self.text[:15]

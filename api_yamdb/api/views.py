@@ -1,15 +1,30 @@
+from django.core.mail import send_mail
+from django.shortcuts import render, get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import viewsets
+from rest_framework import permissions, viewsets
+from rest_framework.response import Response
 
 from .filters import TitleFilter
 from .mixins import GenreCategoryMixin
-from .permissions import AdminOrReadOnly
+from .permissions import (
+    AdminUser,
+    AdminOrReadOnly,
+    ModeratorOrAdminOrReadOnly,
+    Owner
+)
 from .serializers import (
     CategorySerializer, GenreSerializer,
-    TitleGetSerializer, TitleEditSerializer
+    TitleGetSerializer, TitleEditSerializer,
+    UserSerializer, CreateUserSerializer
 )
-from reviews.models import Category, Genre, Title
+from reviews.models import Category, Genre, Title, User
 
+
+class UserViewSet(viewsets.ModelViewSet):
+
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+    permission_classes = [AdminUser, permissions.IsAuthenticated]
 
 
 class GenreViewSet(GenreCategoryMixin):
