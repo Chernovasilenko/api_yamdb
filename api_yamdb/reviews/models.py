@@ -1,5 +1,8 @@
 from django.contrib.auth.models import AbstractUser
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
+
+from reviews.mixins import CommentReviewAbstractModel
 
 
 ROLES = [
@@ -122,53 +125,43 @@ class User(AbstractUser):
         verbose_name='Код подтверждения',
     )
 
-class Review(models.Model):
+class Review(CommentReviewAbstractModel):
     """Модель отзывов."""
-    author = models.ForeignKey(
-        User,
-        related_name='reviews',
-        on_delete=models.CASCADE,
-        verbose_name='Автор отзыва',
-    )
+    
     title = models.ForeignKey(
         Title,
         on_delete=models.CASCADE,
         related_name='reviews',
         verbose_name='Произведение для отзыва'
     )
-    text = models.TextField('Ваш отзыв')
-    pub_date = models.DateTimeField(
-        'Дата публикации',
-        auto_now_add=True,
+    score = models.PositiveSmallIntegerField(
+        validators=[
+            MinValueValidator(1, message='Оценка должна быть больше 1'),
+            MaxValueValidator(10, message='Оценка должна быть до 10'),
+        ],
+        verbose_name='Рейтинг',
     )
     
     class Meta:
         verbose_name = 'Отзыв'
         verbose_name_plural = 'Отзывы'
         ordering = ['-pub_date']
+        constraints = [
+            models.UniqueConstraint(
+                fields=["author", "title"], name="unique_review")]
 
     def __str__(self):
         return self.text[:15]    
 
 
-class Comments(models.Model):
+class Comments(CommentReviewAbstractModel):
     """Модель для комментариев."""
-    author = models.ForeignKey(
-        User,
-        related_name='comments',
-        verbose_name='Автор комментария',
-        on_delete=models.CASCADE
-    )
+       
     review = models.ForeignKey(
         Review,
         related_name='comments',
         on_delete=models.CASCADE,
         verbose_name='Комментируемый отзыв'
-    )
-    text = models.TextField('Ваш комментарий')
-    pub_date = models.DateTimeField(
-        'Дата комментария',
-        auto_now_add=True,
     )
 
     class Meta:
