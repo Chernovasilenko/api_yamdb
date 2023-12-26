@@ -4,7 +4,6 @@ from django.db import models
 from django.utils import timezone
 
 from core import constants
-from reviews.mixins import CommentReviewAbstractModel
 
 
 ROLES = [
@@ -73,6 +72,24 @@ class AbstractModelGenreCategory(models.Model):
 
     def __str__(self):
         return self.name[:constants.MAX_TITLE_LENGTH]
+
+
+class CommentReviewAbstractModel(models.Model):
+    """Абстрактная модель для комментариев и отзывов."""
+
+    author = models.ForeignKey(
+        User,
+        verbose_name='Автор',
+        on_delete=models.CASCADE
+    )
+    text = models.TextField('Введите текст')
+    pub_date = models.DateTimeField(
+        'Дата публикации',
+        auto_now_add=True,
+    )
+
+    class Meta:
+        abstract = True
 
 
 class Genre(AbstractModelGenreCategory):

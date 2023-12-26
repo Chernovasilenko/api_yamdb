@@ -1,4 +1,5 @@
 from django.core.mail import send_mail
+from django.db.models import Avg
 from django.shortcuts import render, get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import permissions, viewsets
@@ -44,9 +45,10 @@ class CategoryViewSet(GenreCategoryMixin):
 class TitleViewSet(viewsets.ModelViewSet):
     """Вьюсет для произведений."""
 
-    # добавить в кверисет среднее значение через annotate
-    # queryset = Title.objects.annotate(rating=7)  # вместо 7 - AVG
-    queryset = Title.objects.all()
+    # здесь в кверисет должно добавиться значение rating,
+    # которое берётся из среднего всех оценок из отзывов,
+    # надеюсь будет работать как задумано
+    queryset = Title.objects.annotate(rating=Avg('reviews__score'))
     filter_backends = (DjangoFilterBackend,)
     filterset_class = TitleFilter
     ordering = ('name',)
