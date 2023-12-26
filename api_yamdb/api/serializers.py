@@ -1,6 +1,5 @@
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
-from rest_framework.validators import UniqueTogetherValidator
 
 from reviews.models import Category, Genre, Title
 
@@ -26,6 +25,15 @@ class GenreSerializer(serializers.ModelSerializer):
 class TitleSerializer(serializers.ModelSerializer):
     """Сериализатор для произведений."""
 
+    category = CategorySerializer()
+    genre = GenreSerializer(many=True)
+    rating = serializers.IntegerField(default=1)  #
+
     class Meta:
         model = Title
-        fields = ('id', 'name', 'description', 'year', 'genre', 'category',)
+        fields = (
+            'id', 'name', 'description', 'year', 'genre', 'category', 'rating'
+        )
+        read_only_fields = (
+            'id', 'name', 'description', 'year', 'genre', 'category', 'rating'
+        )
