@@ -6,6 +6,7 @@ from django.utils import timezone
 from core import constants
 
 
+<<<<<<< HEAD
 ROLES = [
     ('anonymous', 'Аноним'),
     ('user', 'Пользователь'),
@@ -14,6 +15,8 @@ ROLES = [
 ]
 
 
+=======
+>>>>>>> f57c1f60777e2f9205f0b5bd4784c9a9b29ce6a3
 class AbstractModelGenreCategory(models.Model):
     """Абстрактная модель для жанров и категорий."""
 
@@ -96,6 +99,7 @@ class Title(models.Model):
 
     def __str__(self):
         return self.name[:constants.MAX_TITLE_LENGTH]
+<<<<<<< HEAD
         return self.name
 
 
@@ -135,3 +139,5 @@ class User(AbstractUser):
         null=True,
         verbose_name='Код подтверждения',
     )
+=======
+>>>>>>> f57c1f60777e2f9205f0b5bd4784c9a9b29ce6a3
