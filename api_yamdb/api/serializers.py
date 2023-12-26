@@ -1,6 +1,7 @@
 from rest_framework import serializers
+from django.core.validators import RegexValidator
 
-from .models import User
+from reviews.models import User
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -29,6 +30,14 @@ class CreateUserSerializer(serializers.ModelSerializer):
             'last_name',
             'role',
         )
+        validators = [
+            RegexValidator(
+                regex=r'^[\w.@+-]+$',
+                message=(
+                    'Недопустимые символы в имени пользователя!'
+                )
+            )
+        ]
 
     def validate_new_user(self, data):
         if User.objects.filter(username=data['username']).exists():

@@ -98,16 +98,14 @@ class User(AbstractUser):
         blank=True,
         verbose_name='Фамилия',
     )
-    bio = models.TextField(
-        max_length=254,
-        blank=True,
-        null=True,
-        verbose_name='Биография',
-    )
     email = models.EmailField(
         max_length=254,
         unique=True,
         verbose_name='Электронная почта',
+    )
+    bio = models.TextField(
+        blank=True,
+        verbose_name='Биография',
     )
     role = models.CharField(
         max_length=100,
@@ -121,3 +119,6 @@ class User(AbstractUser):
         null=True,
         verbose_name='Код подтверждения',
     )
+
+    def __str__(self):
+        return self.username
