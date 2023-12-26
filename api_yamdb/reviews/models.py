@@ -101,16 +101,14 @@ class User(AbstractUser):
         blank=True,
         verbose_name='Фамилия',
     )
-    bio = models.TextField(
-        max_length=254,
-        blank=True,
-        null=True,
-        verbose_name='Биография',
-    )
     email = models.EmailField(
         max_length=254,
         unique=True,
         verbose_name='Электронная почта',
+    )
+    bio = models.TextField(
+        blank=True,
+        verbose_name='Биография',
     )
     role = models.CharField(
         max_length=100,
@@ -125,9 +123,13 @@ class User(AbstractUser):
         verbose_name='Код подтверждения',
     )
 
+    def __str__(self):
+        return self.username
+
+
 class Review(CommentReviewAbstractModel):
     """Модель отзывов."""
-    
+
     title = models.ForeignKey(
         Title,
         on_delete=models.CASCADE,
@@ -141,7 +143,7 @@ class Review(CommentReviewAbstractModel):
         ],
         verbose_name='Рейтинг',
     )
-    
+
     class Meta:
         verbose_name = 'Отзыв'
         verbose_name_plural = 'Отзывы'
@@ -151,12 +153,12 @@ class Review(CommentReviewAbstractModel):
                 fields=["author", "title"], name="unique_review")]
 
     def __str__(self):
-        return self.text[:15]    
+        return self.text[:15]
 
 
 class Comments(CommentReviewAbstractModel):
     """Модель для комментариев."""
-       
+
     review = models.ForeignKey(
         Review,
         related_name='comments',
@@ -171,5 +173,3 @@ class Comments(CommentReviewAbstractModel):
 
     def __str__(self):
         return self.text[:15]
-
-        
