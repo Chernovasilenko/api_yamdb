@@ -1,5 +1,8 @@
 from django.contrib.auth.models import AbstractUser
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
+
+from reviews.mixins import CommentReviewAbstractModel
 
 
 ROLES = [
@@ -121,3 +124,52 @@ class User(AbstractUser):
         null=True,
         verbose_name='Код подтверждения',
     )
+
+class Review(CommentReviewAbstractModel):
+    """Модель отзывов."""
+    
+    title = models.ForeignKey(
+        Title,
+        on_delete=models.CASCADE,
+        related_name='reviews',
+        verbose_name='Произведение для отзыва'
+    )
+    score = models.PositiveSmallIntegerField(
+        validators=[
+            MinValueValidator(1, message='Оценка должна быть больше 1'),
+            MaxValueValidator(10, message='Оценка должна быть до 10'),
+        ],
+        verbose_name='Рейтинг',
+    )
+    
+    class Meta:
+        verbose_name = 'Отзыв'
+        verbose_name_plural = 'Отзывы'
+        ordering = ['-pub_date']
+        constraints = [
+            models.UniqueConstraint(
+                fields=["author", "title"], name="unique_review")]
+
+    def __str__(self):
+        return self.text[:15]    
+
+
+class Comments(CommentReviewAbstractModel):
+    """Модель для комментариев."""
+       
+    review = models.ForeignKey(
+        Review,
+        related_name='comments',
+        on_delete=models.CASCADE,
+        verbose_name='Комментируемый отзыв'
+    )
+
+    class Meta:
+        verbose_name = 'Комментарий'
+        verbose_name_plural = 'Комментарии'
+        ordering = ['-pub_date']
+
+    def __str__(self):
+        return self.text[:15]
+
+        
