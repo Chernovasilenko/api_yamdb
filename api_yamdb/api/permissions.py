@@ -2,7 +2,7 @@ from rest_framework import permissions
 from rest_framework.permissions import SAFE_METHODS
 
 
-class AdminUser(permissions.BasePermission):
+class IsAdmin(permissions.BasePermission):
     """
     Cуперпользователи и администраторы имеют доступ к данным.
     """
@@ -14,22 +14,17 @@ class AdminUser(permissions.BasePermission):
         )
 
 
-class AdminOrReadOnly(permissions.BasePermission):
+class IsAdminOrReadOnly(IsAdmin):
     """
     Администратор или суперпользователь могут редактировать любые данные.
     Анонимный пользователь может запросить данные.
     """
 
     def has_permission(self, request, view):
-        if request.method in SAFE_METHODS:
-            return True
-        return request.user.is_authenticated and (
-            request.user.is_admin
-            or request.user.is_superuser
-        )
+        return super().has_permission or request.method in SAFE_METHODS
 
 
-class ModeratorOrAdminOrReadOnly(permissions.BasePermission):
+class IsModeratorOrAdminOrReadOnly(permissions.BasePermission):
     """
     Модератор или администратор может редактировать любые данные.
     Анонимный пользователь может запросить данные.
@@ -41,16 +36,5 @@ class ModeratorOrAdminOrReadOnly(permissions.BasePermission):
         return request.user.is_authenticated and (
             request.user.is_admin
             or request.user.is_moderator
+            or obj.author == request.user
         )
-
-
-class Owner(permissions.BasePermission):
-    """
-    Владелец может редактировать только свои данные.
-    """
-
-    def has_permission(self, request, view):
-        return request.user.is_authenticated
-
-    def has_object_permission(self, request, view, obj):
-        return obj.author == request.user

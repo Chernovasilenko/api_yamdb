@@ -1,3 +1,4 @@
+from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
@@ -16,14 +17,27 @@ ROLES = [
 
 class User(AbstractUser):
     """Модель кастомных пользователей."""
-
+    USER = 'user'
+    ADMIN = 'admin'
+    MODERATOR = 'moderator'
+    ROLES = [
+        (USER, 'user'),
+        (ADMIN, 'admin'),
+        (MODERATOR, 'moderator'),
+    ]
+    username = models.CharField(
+        max_length=150,
+        unique=True,
+        verbose_name='Имя пользователя',
+        blank=True
+    )
     first_name = models.CharField(
-        max_length=100,
+        max_length=150,
         blank=True,
         verbose_name='Имя',
     )
     last_name = models.CharField(
-        max_length=100,
+        max_length=150,
         blank=True,
         verbose_name='Фамилия',
     )
@@ -48,6 +62,18 @@ class User(AbstractUser):
         null=True,
         verbose_name='Код подтверждения',
     )
+
+    @property
+    def is_user(self):
+        return self.role == self.USER
+
+    @property
+    def is_admin(self):
+        return self.role == self.ADMIN
+
+    @property
+    def is_moderator(self):
+        return self.role == self.MODERATOR
 
     def __str__(self):
         return self.username
