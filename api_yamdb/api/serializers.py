@@ -1,6 +1,8 @@
-from rest_framework import serializers
 from django.core.validators import RegexValidator
+from django.utils import timezone
+from rest_framework import serializers
 
+from core import constants
 from reviews.models import Category, Comments, Genre, Title, User, Review
 
 
@@ -73,12 +75,53 @@ class GenreSerializer(serializers.ModelSerializer):
         fields = ('name', 'slug',)
 
 
-class TitleSerializer(serializers.ModelSerializer):
-    """Сериализатор для произведений."""
+class TitleGetSerializer(serializers.ModelSerializer):
+    """Сериализатор для получения произведений."""
+
+    category = CategorySerializer()
+    genre = GenreSerializer(many=True)
+    rating = serializers.IntegerField(default=1)  #
+
+    class Meta:
+        model = Title
+        fields = (
+            'id', 'name', 'description', 'year', 'genre', 'category', 'rating'
+        )
+        read_only_fields = (
+            'id', 'name', 'description', 'year', 'genre', 'category', 'rating'
+        )
+
+
+class TitleEditSerializer(serializers.ModelSerializer):
+    """Сериализатор для редактирования произведений."""
+
+    category = serializers.SlugRelatedField(
+        slug_field='slug',
+        queryset=Category.objects.all()
+    )
+    genre = serializers.SlugRelatedField(
+        slug_field='slug',
+        queryset=Genre.objects.all(),
+        many=True
+    )
+    rating = serializers.IntegerField(required=False)
 
     class Meta:
         model = Title
         fields = ('id', 'name', 'description', 'year', 'genre', 'category',)
+
+    def validate_year(self, value):
+        """Проверка допустимости значения года."""
+
+        if (value > timezone.now().year):
+            raise serializers.ValidationError(
+                'Год произведения не может быть больше текущего!'
+            )
+        if (value < constants.MIN_VALUE):
+            raise serializers.ValidationError(
+                'Год произведения не может быть ниже 1!'
+            )
+        return value
 
 
 class CommentSerializer(serializers.ModelSerializer):
