@@ -19,6 +19,12 @@ from .serializers import (
     UserSerializer, CreateUserSerializer
 )
 from reviews.models import Category, Genre, Title, User
+    UserSerializer,
+    CreateUserSerializer,
+    ReviewSerializer,
+    CommentSerializer
+)
+from reviews.models import User, Title, Review
 
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -60,3 +66,51 @@ class TitleViewSet(viewsets.ModelViewSet):
         if self.request.method == 'GET':
             return TitleGetSerializer
         return TitleEditSerializer
+    lookup_field = 'username'
+
+
+class ReviewViewSet(viewsets.ModelViewSet):
+    """Вьюсет отзывов."""
+    
+    serializer_class = ReviewSerializer
+    permission_classes = [
+        ModeratorOrAdminOrReadOnly,
+        permissions.IsAuthenticatedOrReadOnly
+    ]
+    #pagination_class = LimitOffsetPagination
+    
+    def title_for_reviews(self):
+        return Title.objects.get(pk=self.kwargs.get('title_id'))
+
+    def get_queryset(self):
+        return self.title_for_reviews().reviews.all()
+
+    def perform_create(self, serializer):
+        serializer.save(
+            author=self.request.user, title=self.title_for_reviews()
+        )
+        
+
+class CommentViewSet(viewsets.ModelViewSet):
+    """Вьюсет комментариев."""
+
+    serializer_class = CommentSerializer
+    permission_classes = [
+        ModeratorOrAdminOrReadOnly,
+        permissions.IsAuthenticatedOrReadOnly
+    ]
+    #pagination_class = LimitOffsetPagination
+
+    def commented_review(self):
+        return Review.objects.get(
+            pk=self.kwargs.get('review_id'),
+            title_id=self.kwargs.get('title_id')
+        )
+
+    def get_queryset(self):
+        return self.commented_review().comments.all()
+
+    def perform_create(self, serializer):
+        serializer.save(
+            author=self.request.user, review=self.commented_review()
+        )
