@@ -126,6 +126,7 @@ class TitleEditSerializer(serializers.ModelSerializer):
 
 class CommentSerializer(serializers.ModelSerializer):
     """Сериализатор комментариев."""
+    
     author = serializers.SlugRelatedField(
         read_only=True, slug_field='username'
     )
@@ -138,6 +139,7 @@ class CommentSerializer(serializers.ModelSerializer):
 
 class ReviewSerializer(serializers.ModelSerializer):
     """Сериализатор отзывов."""
+   
     author = serializers.SlugRelatedField(
         read_only=True, slug_field='username'
     )
