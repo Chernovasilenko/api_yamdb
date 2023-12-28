@@ -3,6 +3,11 @@ from django.db.models import Avg
 from django.shortcuts import render, get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import permissions, viewsets
+from rest_framework import (
+    permissions,
+    viewsets
+)
+from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.response import Response
 
 from .filters import TitleFilter
@@ -71,16 +76,21 @@ class TitleViewSet(viewsets.ModelViewSet):
 
 class ReviewViewSet(viewsets.ModelViewSet):
     """Вьюсет отзывов."""
-    
+
     serializer_class = ReviewSerializer
     permission_classes = [
         ModeratorOrAdminOrReadOnly,
-        permissions.IsAuthenticatedOrReadOnly
+        permissions.IsAuthenticatedOrReadOnly 
+        # мне кажется все таки нужен, для обычного аутент. юзера,
+        # но я не против удаления
     ]
-    #pagination_class = LimitOffsetPagination
-    
+    pagination_class = LimitOffsetPagination
+
     def title_for_reviews(self):
-        return Title.objects.get(pk=self.kwargs.get('title_id'))
+        return get_object_or_404(
+            Title,
+            pk=self.kwargs.get('title_id')
+        )
 
     def get_queryset(self):
         return self.title_for_reviews().reviews.all()
@@ -89,7 +99,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
         serializer.save(
             author=self.request.user, title=self.title_for_reviews()
         )
-        
+
 
 class CommentViewSet(viewsets.ModelViewSet):
     """Вьюсет комментариев."""
@@ -99,12 +109,12 @@ class CommentViewSet(viewsets.ModelViewSet):
         ModeratorOrAdminOrReadOnly,
         permissions.IsAuthenticatedOrReadOnly
     ]
-    #pagination_class = LimitOffsetPagination
+    pagination_class = LimitOffsetPagination
 
     def commented_review(self):
-        return Review.objects.get(
+        return get_object_or_404(
+            Review,
             pk=self.kwargs.get('review_id'),
-            title_id=self.kwargs.get('title_id')
         )
 
     def get_queryset(self):
