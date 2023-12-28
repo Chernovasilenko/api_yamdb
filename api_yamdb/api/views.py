@@ -75,12 +75,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
     """Вьюсет отзывов."""
 
     serializer_class = ReviewSerializer
-    permission_classes = [
-        ModeratorOrAdminOrReadOnly,
-        permissions.IsAuthenticatedOrReadOnly 
-        # мне кажется все таки нужен, для обычного аутент. юзера,
-        # но я не против удаления
-    ]
+    permission_classes = (ModeratorOrAdminOrReadOnly,)
     pagination_class = LimitOffsetPagination
 
     def title_for_reviews(self):
@@ -94,7 +89,8 @@ class ReviewViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(
-            author=self.request.user, title=self.title_for_reviews()
+            author=self.request.user,
+            title=self.title_for_reviews()
         )
 
 
@@ -102,10 +98,7 @@ class CommentViewSet(viewsets.ModelViewSet):
     """Вьюсет комментариев."""
 
     serializer_class = CommentSerializer
-    permission_classes = [
-        ModeratorOrAdminOrReadOnly,
-        permissions.IsAuthenticatedOrReadOnly
-    ]
+    permission_classes = (ModeratorOrAdminOrReadOnly,)
     pagination_class = LimitOffsetPagination
 
     def commented_review(self):
@@ -119,5 +112,6 @@ class CommentViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(
-            author=self.request.user, review=self.commented_review()
+            author=self.request.user,
+            review=self.commented_review()
         )
