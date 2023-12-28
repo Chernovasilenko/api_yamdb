@@ -8,6 +8,7 @@ from rest_framework import (
     viewsets
 )
 from rest_framework.pagination import LimitOffsetPagination
+
 from rest_framework.response import Response
 
 from .filters import TitleFilter
@@ -21,14 +22,10 @@ from .permissions import (
 from .serializers import (
     CategorySerializer, GenreSerializer,
     TitleGetSerializer, TitleEditSerializer,
-    UserSerializer, CreateUserSerializer
+    UserSerializer, CreateUserSerializer,
+    ReviewSerializer, CommentSerializer,
 )
 from reviews.models import Category, Genre, Title, User
-    UserSerializer,
-    CreateUserSerializer,
-    ReviewSerializer,
-    CommentSerializer
-)
 from reviews.models import User, Title, Review
 
 
