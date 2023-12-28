@@ -7,14 +7,6 @@ from django.utils import timezone
 from core import constants
 
 
-ROLES = [
-    ('anonymous', 'Аноним'),
-    ('user', 'Пользователь'),
-    ('moderator', 'Модератор'),
-    ('admin', 'Администратор'),
-]
-
-
 class User(AbstractUser):
     """Модель кастомных пользователей."""
     USER = 'user'
@@ -76,7 +68,7 @@ class User(AbstractUser):
         return self.role == self.MODERATOR
 
     def __str__(self):
-        return self.username
+        return self.username[:constants.MAX_TITLE_LENGTH]
 
 
 class AbstractModelGenreCategory(models.Model):

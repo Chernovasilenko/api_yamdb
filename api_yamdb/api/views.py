@@ -2,16 +2,16 @@ from django.core.mail import send_mail
 from django.db.models import Avg
 from django.shortcuts import render, get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import permissions, viewsets
+from rest_framework import permissions, viewsets, mixins, status
+from rest_framework.decorators import action
 from rest_framework.response import Response
 
 from .filters import TitleFilter
 from .mixins import GenreCategoryMixin
 from .permissions import (
-    AdminUser,
-    AdminOrReadOnly,
-    ModeratorOrAdminOrReadOnly,
-    Owner
+    IsAdmin,
+    IsAdminOrReadOnly,
+    IsModeratorOrAdminOrReadOnly
 )
 from .serializers import (
     CategorySerializer, GenreSerializer,
@@ -21,11 +21,53 @@ from .serializers import (
 from reviews.models import Category, Genre, Title, User
 
 
-class UserViewSet(viewsets.ModelViewSet):
+class UserViewSet(viewsets.GenericViewSet,
+                  mixins.CreateModelMixin,
+                  mixins.ListModelMixin,
+                  mixins.RetrieveModelMixin
+                  ):
 
     queryset = User.objects.all()
     serializer_class = UserSerializer
-    permission_classes = [AdminUser, permissions.IsAuthenticated]
+    permission_classes = (IsAdmin,)
+
+    @action(detail=False,
+            methods=['get', 'patch'],
+            permission_classes=(permissions.IsAuthenticated,))
+    def get_user_data(self, request):
+        """
+        Метод для получения данных пользователя и редактирования.
+        """
+        if request.method == 'GET':
+            return UserSerializer(request.user, status=status.HTTP_200_OK).data
+        serializer = UserSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save(role=request.user.role)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    @action(detail=False,
+            methods=['post'],
+            permission_classes=(permissions.AllowAny,))
+    def user_create(self, request):
+        """Метод для создания пользователя и отправления письма."""
+        serializer = CreateUserSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        username = serializer.validated_data['username']
+        email = serializer.validated_data['email']
+        user = User.objects.get_or_create(
+            username=username, email=email, **serializer.validated_data
+        )
+        confirmation_code = user.confirmation_code
+        send_mail(
+            'Код подтверждения',
+            f'Ваш код подтверждения: {confirmation_code}',)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class CheckTokenRecieveView(viewsets.GenericViewSet,
+                            mixins.CreateModelMixin,
+                            ):
+    pass
 
 
 class GenreViewSet(GenreCategoryMixin):
@@ -52,7 +94,7 @@ class TitleViewSet(viewsets.ModelViewSet):
     filter_backends = (DjangoFilterBackend,)
     filterset_class = TitleFilter
     ordering = ('name',)
-    permission_classes = (AdminOrReadOnly,)
+    permission_classes = (IsAdminOrReadOnly,)
 
     def get_serializer_class(self):
         """Выбор сериализатора в зависимости от типа запроса."""
