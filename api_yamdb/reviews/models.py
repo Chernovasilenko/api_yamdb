@@ -9,6 +9,7 @@ from core import constants
 
 class User(AbstractUser):
     """Модель кастомных пользователей."""
+
     USER = 'user'
     ADMIN = 'admin'
     MODERATOR = 'moderator'
@@ -204,6 +205,7 @@ class Review(CommentReviewAbstractModel):
 
 class Comments(CommentReviewAbstractModel):
     """Модель для комментариев."""
+
     review = models.ForeignKey(
         Review,
         related_name='comments',
