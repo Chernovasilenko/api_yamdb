@@ -204,7 +204,6 @@ class Review(CommentReviewAbstractModel):
 
 class Comments(CommentReviewAbstractModel):
     """Модель для комментариев."""
-
     review = models.ForeignKey(
         Review,
         related_name='comments',
