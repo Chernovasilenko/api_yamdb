@@ -6,6 +6,8 @@ from reviews.models import (
     Category, Comments, Genre, GenreTitle, Review, Title, User
 )
 
+DATA_DIR = f'{settings.BASE_DIR}\\static\\data\\'
+
 TABLES_FILES = {
     User: 'users.csv',
     Category: 'category.csv',
@@ -17,7 +19,9 @@ TABLES_FILES = {
 }
 
 TABLES_ROWS = {
-    User: ['id', 'username', 'emeil', 'role', 'bio', 'first_name', 'last_name'],
+    User: [
+        'id', 'username', 'emeil', 'role', 'bio', 'first_name', 'last_name'
+    ],
     Category: ['id', 'name', 'slug'],
     Genre: ['id', 'name', 'slug'],
     Title: ['id', 'name', 'year', 'category_id'],
@@ -31,9 +35,8 @@ class Command(BaseCommand):
     help = """Импорт данных из CSV-файлов для базы данных"""
 
     def load_data(self, model, file_name):
-        file_path = f'{settings.BASE_DIR}/static/data/{file_name}'
         with open(
-                file_path,
+                f'{DATA_DIR}{file_name}',
                 'r',
                 encoding='utf-8'
         ) as file:
@@ -43,20 +46,15 @@ class Command(BaseCommand):
                     model(**data) for data in reader)
             except ValueError as e:
                 column_names = reader.fieldnames
-                print(column_names)
                 for row in column_names:
                     if row not in TABLES_ROWS[model]:
-                        self.stdout.write(self.style.ERROR(
-                            f'Ошибка при загрузке данных в таблицу {model.__qualname__}\n'
-                            f'Поля {row} нет в таблице. Допустимые поля:'
-                            f'{TABLES_ROWS[model]}'
+                        raise CommandError(
+                            f'{e}\n'
+                            f'Поля {row} нет в таблице. '
+                            f'Проверьте названия полей в файле {file_name}. '
+                            f'Допустимые поля: {TABLES_ROWS[model]}'
                         )
-                        )
-                else:
-                    raise CommandError(
-                        f'При загрузке данных в таблицу {model.__qualname__} произошла ошибка {e}'
-                    )
-            else:
+            finally:
                 self.stdout.write(
                     self.style.SUCCESS(
                         f'Данные в таблицу {model.__qualname__} загружены'
@@ -64,5 +62,24 @@ class Command(BaseCommand):
                 )
 
     def handle(self, *args, **options):
-        for model, file_name in TABLES_FILES.items():
-            self.load_data(model, file_name)
+        try:
+            for model, file_name in TABLES_FILES.items():
+                self.load_data(model, file_name)
+        except FileNotFoundError as e:
+            raise CommandError(
+                f'При загрузке данных в таблицу {model.__qualname__} '
+                f'произошла ошибка {e}\n'
+                f'Проверьте, что в директории "{DATA_DIR}" находится файл '
+                f'"{file_name}" и он правильно назван'
+            )
+        except Exception as e:
+            raise CommandError(
+                f'При загрузке данных в таблицу {model.__qualname__} '
+                f'произошла ошибка {e}\n'
+            )
+        finally:
+            self.stdout.write(
+                self.style.SUCCESS(
+                    'Все данные успешно загружены'
+                )
+            )
