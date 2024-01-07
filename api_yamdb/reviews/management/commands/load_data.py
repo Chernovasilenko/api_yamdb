@@ -1,5 +1,6 @@
 import csv
 
+from django.db.utils import IntegrityError
 from django.core.management.base import BaseCommand, CommandError
 from django.conf import settings
 from reviews.models import (
@@ -30,6 +31,11 @@ TABLES_ROWS = {
     GenreTitle: ['id', 'title_id', 'genre_id'],
 }
 
+FLUSHING_MESSAGE = (
+    '\nПеред следующей загрузкой данных необходимо очистить базу '
+    'данных командой "python manage.py flush"'
+)
+
 
 class Command(BaseCommand):
     help = """Импорт данных из CSV-файлов для базы данных"""
@@ -53,6 +59,7 @@ class Command(BaseCommand):
                             f'Поля {row} нет в таблице. '
                             f'Проверьте названия полей в файле {file_name}. '
                             f'Допустимые поля: {TABLES_ROWS[model]}'
+                            f'{FLUSHING_MESSAGE}'
                         )
             finally:
                 self.stdout.write(
@@ -71,11 +78,20 @@ class Command(BaseCommand):
                 f'произошла ошибка {e}\n'
                 f'Проверьте, что в директории "{DATA_DIR}" находится файл '
                 f'"{file_name}" и он правильно назван'
+                f'{FLUSHING_MESSAGE}'
+            )
+        except IntegrityError as e:
+            raise CommandError(
+                f'При загрузке данных в таблицу {model.__qualname__} '
+                f'произошла ошибка {e}\n'
+                'Данные, которые вы пытаетесь загрузить, уже есть в таблице'
+                f'{FLUSHING_MESSAGE}'
             )
         except Exception as e:
             raise CommandError(
                 f'При загрузке данных в таблицу {model.__qualname__} '
-                f'произошла ошибка {e}\n'
+                f'произошла ошибка {e}'
+                f'{FLUSHING_MESSAGE}'
             )
         finally:
             self.stdout.write(
