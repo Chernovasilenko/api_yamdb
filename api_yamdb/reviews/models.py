@@ -1,3 +1,4 @@
+from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
@@ -6,24 +7,30 @@ from django.utils import timezone
 from core import constants
 
 
-ROLES = [
-    ('anonymous', 'Аноним'),
-    ('user', 'Пользователь'),
-    ('moderator', 'Модератор'),
-    ('admin', 'Администратор'),
-]
-
-
 class User(AbstractUser):
     """Модель кастомных пользователей."""
 
+    USER = 'user'
+    ADMIN = 'admin'
+    MODERATOR = 'moderator'
+    ROLES = [
+        (USER, 'user'),
+        (ADMIN, 'admin'),
+        (MODERATOR, 'moderator'),
+    ]
+    username = models.CharField(
+        max_length=150,
+        unique=True,
+        verbose_name='Имя пользователя',
+        blank=True
+    )
     first_name = models.CharField(
-        max_length=100,
+        max_length=150,
         blank=True,
         verbose_name='Имя',
     )
     last_name = models.CharField(
-        max_length=100,
+        max_length=150,
         blank=True,
         verbose_name='Фамилия',
     )
@@ -49,8 +56,20 @@ class User(AbstractUser):
         verbose_name='Код подтверждения',
     )
 
+    @property
+    def is_user(self):
+        return self.role == self.USER
+
+    @property
+    def is_admin(self):
+        return self.role == (self.ADMIN or self.is_superuser)
+
+    @property
+    def is_moderator(self):
+        return self.role == self.MODERATOR
+
     def __str__(self):
-        return self.username
+        return self.username[:constants.MAX_TITLE_LENGTH]
 
 
 class AbstractModelGenreCategory(models.Model):
@@ -186,6 +205,7 @@ class Review(CommentReviewAbstractModel):
 
 class Comments(CommentReviewAbstractModel):
     """Модель для комментариев."""
+
     review = models.ForeignKey(
         Review,
         related_name='comments',
