@@ -9,7 +9,6 @@ from core import constants
 
 class User(AbstractUser):
     """Модель кастомных пользователей."""
-
     USER = 'user'
     ADMIN = 'admin'
     MODERATOR = 'moderator'
@@ -155,7 +154,6 @@ class Title(models.Model):
     )
     genre = models.ManyToManyField(
         Genre,
-        through='GenreTitle',
         verbose_name='Жанр',
     )
     category = models.ForeignKey(
@@ -163,8 +161,7 @@ class Title(models.Model):
         verbose_name='Категория',
         on_delete=models.SET_NULL,
         related_name='titles',
-        null=True,
-        blank=True
+        null=True
     )
 
     class Meta:
@@ -174,14 +171,6 @@ class Title(models.Model):
 
     def __str__(self):
         return self.name[:constants.MAX_TITLE_LENGTH]
-
-
-class GenreTitle(models.Model):
-    genre = models.ForeignKey(Genre, on_delete=models.CASCADE)
-    title = models.ForeignKey(Title, on_delete=models.CASCADE)
-
-    def __str__(self):
-        return f'{self.title}: {self.genre}'
 
 
 class Review(CommentReviewAbstractModel):
