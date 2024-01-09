@@ -112,6 +112,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
     serializer_class = ReviewSerializer
     permission_classes = (IsModeratorOrAdminOrReadOnly,)
     pagination_class = LimitOffsetPagination
+    http_method_names = ('get', 'post', 'patch', 'delete')
 
     def title_for_reviews(self):
         return get_object_or_404(
@@ -135,6 +136,7 @@ class CommentViewSet(viewsets.ModelViewSet):
     serializer_class = CommentSerializer
     permission_classes = (IsModeratorOrAdminOrReadOnly,)
     pagination_class = LimitOffsetPagination
+    http_method_names = ('get', 'post', 'patch', 'delete')
 
     def commented_review(self):
         return get_object_or_404(
