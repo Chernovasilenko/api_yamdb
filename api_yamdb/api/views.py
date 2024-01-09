@@ -1,6 +1,8 @@
 from django.core.mail import send_mail
+from django.contib.auth.tokens import PasswordResetTokenGenerator
 from django.db.models import Avg
 from django.shortcuts import render, get_object_or_404
+from django.utils import six
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import permissions, viewsets, mixins, status
 from rest_framework.decorators import action
@@ -63,11 +65,23 @@ class UserViewSet(viewsets.GenericViewSet,
             f'Ваш код подтверждения: {confirmation_code}',)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
+    @action(detail=False,
+            methods=['post'],
+            permission_classes=(permissions.AllowAny,))
+    def make_token(request):
+        confirmation_code = PasswordResetTokenGenerator().make_token(request.user)
+        return Response(
+            {'confirmation_code': confirmation_code},
+            status=status.HTTP_200_OK
+        )
 
-class CheckTokenRecieveView(viewsets.GenericViewSet,
-                            mixins.CreateModelMixin,
-                            ):
-    pass
+    def check_token(request):
+        confirmation_code = request.data.get('confirmation_code')
+        if confirmation_code is None:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        if not PasswordResetTokenGenerator().check_token(request.user, confirmation_code):
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        return Response(status=status.HTTP_200_OK)
 
 
 class GenreViewSet(GenreCategoryMixin):
