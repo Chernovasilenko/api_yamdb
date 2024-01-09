@@ -40,28 +40,11 @@ class UserViewSet(viewsets.GenericViewSet,
         Метод для получения данных пользователя и редактирования.
         """
         if request.method == 'GET':
-            return UserSerializer(request.user, status=status.HTTP_200_OK).data
-        serializer = UserSerializer(data=request.data)
+            serializer = UserSerializer(self.request.user)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        serializer = UserSerializer(self.request.user, data=request.data)
         serializer.is_valid(raise_exception=True)
         serializer.save(role=request.user.role)
-        return Response(serializer.data, status=status.HTTP_200_OK)
-
-    @action(detail=False,
-            methods=['post'],
-            permission_classes=(permissions.AllowAny,))
-    def user_create(self, request):
-        """Метод для создания пользователя и отправления письма."""
-        serializer = CreateUserSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        username = serializer.validated_data['username']
-        email = serializer.validated_data['email']
-        user = User.objects.get_or_create(
-            username=username, email=email, **serializer.validated_data
-        )
-        confirmation_code = user.confirmation_code
-        send_mail(
-            'Код подтверждения',
-            f'Ваш код подтверждения: {confirmation_code}',)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     @action(detail=False,
@@ -79,6 +62,47 @@ class UserViewSet(viewsets.GenericViewSet,
         if confirmation_code is None:
             return Response(status=status.HTTP_400_BAD_REQUEST)
         if not PasswordResetTokenGenerator().check_token(request.user, confirmation_code):
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        return Response(status=status.HTTP_200_OK)
+
+
+class SignUpViewSet(viewsets.GenericViewSet,
+                    mixins.CreateModelMixin
+                    ):
+
+    permission_classes = (permissions.AllowAny,)
+
+    @action(detail=False,
+            methods=['post'])
+    def sign_up(self, request):
+        serializer = CreateUserSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        username = serializer.validated_data['username']
+        email = serializer.validated_data['email']
+        user, confirmation_code = User.objects.get_or_create(username=username, email=email)
+        confirmation_code = PasswordResetTokenGenerator().make_token(user)
+        send_mail(
+            'Код подтверждения',
+            f'{confirmation_code}',)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class CheckConfirmationCode(viewsets.GenericViewSet,
+                            mixins.CreateModelMixin
+                            ):
+
+    permission_classes = (permissions.AllowAny,)
+
+    @action(detail=False,
+            methods=['post'])
+    def check_code(self, request):
+        serializer = CreateUserSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        username = serializer.validated_data['username']
+        email = serializer.validated_data['email']
+        user = get_object_or_404(User, username=username, email=email)
+        confirmation_code = serializer.validated_data['confirmation_code']
+        if not PasswordResetTokenGenerator().check_token(user, confirmation_code):
             return Response(status=status.HTTP_400_BAD_REQUEST)
         return Response(status=status.HTTP_200_OK)
 
