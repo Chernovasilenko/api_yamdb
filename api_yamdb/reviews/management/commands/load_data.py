@@ -61,7 +61,7 @@ class Command(BaseCommand):
                             f'Допустимые поля: {TABLES_ROWS[model]}'
                             f'{FLUSHING_MESSAGE}'
                         )
-            finally:
+            else:
                 self.stdout.write(
                     self.style.SUCCESS(
                         f'Данные в таблицу {model.__qualname__} загружены'
@@ -71,29 +71,29 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         try:
             for model, file_name in TABLES_FILES.items():
+                error_message = (
+                    f'При загрузке данных в таблицу {model.__qualname__} '
+                    f'произошла ошибка: '
+                )
                 self.load_data(model, file_name)
         except FileNotFoundError as e:
             raise CommandError(
-                f'При загрузке данных в таблицу {model.__qualname__} '
-                f'произошла ошибка {e}\n'
+                f'{error_message}{e}\n'
                 f'Проверьте, что в директории "{DATA_DIR}" находится файл '
                 f'"{file_name}" и он правильно назван'
                 f'{FLUSHING_MESSAGE}'
             )
         except IntegrityError as e:
             raise CommandError(
-                f'При загрузке данных в таблицу {model.__qualname__} '
-                f'произошла ошибка {e}\n'
+                f'{error_message}{e}\n'
                 'Данные, которые вы пытаетесь загрузить, уже есть в таблице'
                 f'{FLUSHING_MESSAGE}'
             )
         except Exception as e:
             raise CommandError(
-                f'При загрузке данных в таблицу {model.__qualname__} '
-                f'произошла ошибка {e}'
-                f'{FLUSHING_MESSAGE}'
+                f'{error_message}{e}{FLUSHING_MESSAGE}'
             )
-        finally:
+        else:
             self.stdout.write(
                 self.style.SUCCESS(
                     'Все данные успешно загружены'

@@ -91,7 +91,7 @@ class CategoryViewSet(GenreCategoryMixin):
 class TitleViewSet(viewsets.ModelViewSet):
     """Вьюсет для произведений."""
 
-    http_method_names = ['get', 'post', 'patch', 'delete']
+    http_method_names = ('get', 'post', 'patch', 'delete')
     queryset = Title.objects.annotate(rating=Avg('reviews__score'))
     filter_backends = (DjangoFilterBackend,)
     filterset_class = TitleFilter
