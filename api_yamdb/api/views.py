@@ -4,7 +4,7 @@ from django.db.models import Avg
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 
-from rest_framework.decorators import action
+from rest_framework.decorators import action, api_view
 from rest_framework.pagination import LimitOffsetPagination
 from rest_framework import permissions, viewsets, mixins, status
 from rest_framework.response import Response
@@ -71,46 +71,36 @@ class UserViewSet(viewsets.GenericViewSet,
         return Response(status=status.HTTP_200_OK)
 
 
-class SignUpViewSet(APIView):
-
-    permission_classes = (permissions.AllowAny,)
-    serializer = CreateUserSerializer
-    queryset = User.objects.all()
-
-    def sign_up(self, request):
-        serializer = CreateUserSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        username = serializer.validated_data['username']
-        email = serializer.validated_data['email']
-        user, confirmation_code = User.objects.get_or_create(
-            username=username,
-            email=email
-        )
-        confirmation_code = PasswordResetTokenGenerator().make_token(user)
-        user.confirmation_code = confirmation_code
-        user.save()
-        send_mail(
-            'Код подтверждения',
-            f'{confirmation_code}',)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+@api_view(['POST'])
+def sign_up(self, request):
+    serializer = CreateUserSerializer(data=request.data)
+    serializer.is_valid(raise_exception=True)
+    username = serializer.validated_data['username']
+    email = serializer.validated_data['email']
+    user, confirmation_code = User.objects.get_or_create(
+        username=username,
+        email=email
+    )
+    confirmation_code = PasswordResetTokenGenerator().make_token(user)
+    user.confirmation_code = confirmation_code
+    user.save()
+    send_mail(
+        'Код подтверждения',
+        f'{confirmation_code}',)
+    return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-class CheckConfirmationCode(APIView):
-
-    permission_classes = (permissions.AllowAny,)
-    serializer = CreateUserSerializer
-    queryset = User.objects.all()
-
-    def check_code(self, request):
-        serializer = CreateUserSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        username = serializer.validated_data['username']
-        email = serializer.validated_data['email']
-        user = get_object_or_404(User, username=username, email=email)
-        confirmation_code = serializer.validated_data['confirmation_code']
-        if not PasswordResetTokenGenerator().check_token(user, confirmation_code):
-            return Response(status=status.HTTP_400_BAD_REQUEST)
-        return Response(status=status.HTTP_200_OK)
+@api_view(['POST'])
+def check_code(self, request):
+    serializer = CreateUserSerializer(data=request.data)
+    serializer.is_valid(raise_exception=True)
+    username = serializer.validated_data['username']
+    email = serializer.validated_data['email']
+    user = get_object_or_404(User, username=username, email=email)
+    confirmation_code = serializer.validated_data['confirmation_code']
+    if not PasswordResetTokenGenerator().check_token(user, confirmation_code):
+        return Response(status=status.HTTP_400_BAD_REQUEST)
+    return Response(status=status.HTTP_200_OK)
 
 
 class GenreViewSet(GenreCategoryMixin):
