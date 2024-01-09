@@ -1,6 +1,8 @@
 from django.core.validators import RegexValidator
 from django.utils import timezone
 from rest_framework import serializers
+from rest_framework.exceptions import ValidationError
+from rest_framework.generics import get_object_or_404
 
 from core import constants
 from reviews.models import Category, Comments, Genre, Title, User, Review
@@ -108,7 +110,9 @@ class TitleEditSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Title
-        fields = ('id', 'name', 'description', 'year', 'genre', 'category',)
+        fields = (
+            'id', 'name', 'description', 'year', 'genre', 'category', 'rating'
+        )
 
     def validate_year(self, value):
         """Проверка допустимости значения года."""
@@ -124,11 +128,18 @@ class TitleEditSerializer(serializers.ModelSerializer):
         return value
 
 
-class CommentSerializer(serializers.ModelSerializer):
-    """Сериализатор комментариев."""
+class AuthorSerializer(serializers.ModelSerializer):
+    """Сериализатор автора."""
+
     author = serializers.SlugRelatedField(
-        read_only=True, slug_field='username'
+        read_only=True,
+        slug_field='username',
+        default=serializers.CurrentUserDefault()
     )
+
+
+class CommentSerializer(AuthorSerializer):
+    """Сериализатор комментариев."""
 
     class Meta:
         fields = '__all__'
@@ -136,11 +147,21 @@ class CommentSerializer(serializers.ModelSerializer):
         read_only_fields = ('review', 'author')
 
 
-class ReviewSerializer(serializers.ModelSerializer):
+class ReviewSerializer(AuthorSerializer):
     """Сериализатор отзывов."""
-    author = serializers.SlugRelatedField(
-        read_only=True, slug_field='username'
-    )
+
+    def validate(self, data):
+        """Валидация отзыва."""
+
+        request = self.context['request']
+        author = request.user
+        title_id = self.context.get('view').kwargs.get('title_id')
+        title = get_object_or_404(Title, pk=title_id)
+        if (
+            request.method == 'POST' and title.reviews(author=author).exists()
+        ):
+            raise ValidationError('Вы уже оставили отзыв!')
+        return data
 
     class Meta:
         fields = '__all__'
