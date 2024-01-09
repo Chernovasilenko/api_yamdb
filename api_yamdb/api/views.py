@@ -1,8 +1,7 @@
 from django.core.mail import send_mail
 from django.contib.auth.tokens import PasswordResetTokenGenerator
 from django.db.models import Avg
-from django.shortcuts import render, get_object_or_404
-from django.utils import six
+from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import permissions, viewsets, mixins, status
 from rest_framework.decorators import action
