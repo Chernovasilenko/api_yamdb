@@ -88,35 +88,36 @@ def check_code(self, request):
     return Response(status=status.HTTP_200_OK)
 
 
-class SignUpViewSet(viewsets.GenericViewSet,
-                    mixins.CreateModelMixin
-                    ):
+class SignUpViewSet(APIView):
 
     permission_classes = (permissions.AllowAny,)
+    serializer = CreateUserSerializer
+    queryset = User.objects.all()
 
-    @action(detail=False,
-            methods=['post'])
     def sign_up(self, request):
         serializer = CreateUserSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         username = serializer.validated_data['username']
         email = serializer.validated_data['email']
-        user, confirmation_code = User.objects.get_or_create(username=username, email=email)
+        user, confirmation_code = User.objects.get_or_create(
+            username=username,
+            email=email
+        )
         confirmation_code = PasswordResetTokenGenerator().make_token(user)
+        user.confirmation_code = confirmation_code
+        user.save()
         send_mail(
             'Код подтверждения',
             f'{confirmation_code}',)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-class CheckConfirmationCode(viewsets.GenericViewSet,
-                            mixins.CreateModelMixin
-                            ):
+class CheckConfirmationCode(APIView):
 
     permission_classes = (permissions.AllowAny,)
+    serializer = CreateUserSerializer
+    queryset = User.objects.all()
 
-    @action(detail=False,
-            methods=['post'])
     def check_code(self, request):
         serializer = CreateUserSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
