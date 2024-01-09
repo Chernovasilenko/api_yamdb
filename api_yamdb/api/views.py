@@ -1,6 +1,5 @@
 from django.core.mail import send_mail
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
-from django.contib.auth.tokens import PasswordResetTokenGenerator
 from django.db.models import Avg
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
