@@ -33,6 +33,7 @@ class UserViewSet(viewsets.GenericViewSet,
     queryset = User.objects.all()
     serializer_class = UserSerializer
     permission_classes = (IsAdmin,)
+    lookup_field = 'username'
 
     @action(detail=False,
             methods=['get', 'patch'],
@@ -90,9 +91,7 @@ class CategoryViewSet(GenreCategoryMixin):
 class TitleViewSet(viewsets.ModelViewSet):
     """Вьюсет для произведений."""
 
-    # здесь в кверисет должно добавиться значение rating,
-    # которое берётся из среднего всех оценок из отзывов,
-    # надеюсь будет работать как задумано
+    http_method_names = ('get', 'post', 'patch', 'delete')
     queryset = Title.objects.annotate(rating=Avg('reviews__score'))
     filter_backends = (DjangoFilterBackend,)
     filterset_class = TitleFilter
@@ -105,7 +104,6 @@ class TitleViewSet(viewsets.ModelViewSet):
         if self.request.method == 'GET':
             return TitleGetSerializer
         return TitleEditSerializer
-    lookup_field = 'username'
 
 
 class ReviewViewSet(viewsets.ModelViewSet):

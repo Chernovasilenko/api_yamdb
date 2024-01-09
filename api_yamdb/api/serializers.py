@@ -110,7 +110,9 @@ class TitleEditSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Title
-        fields = ('id', 'name', 'description', 'year', 'genre', 'category',)
+        fields = (
+            'id', 'name', 'description', 'year', 'genre', 'category', 'rating'
+        )
 
     def validate_year(self, value):
         """Проверка допустимости значения года."""
