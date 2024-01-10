@@ -152,7 +152,6 @@ class ReviewSerializer(AuthorSerializer):
 
     def validate(self, data):
         """Валидация отзыва."""
-
         request = self.context['request']
         author = request.user
         title_id = self.context.get('view').kwargs.get('title_id')

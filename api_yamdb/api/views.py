@@ -4,7 +4,6 @@ from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 
 from rest_framework.decorators import action
-from rest_framework.pagination import LimitOffsetPagination
 from rest_framework import permissions, viewsets, mixins, status
 from rest_framework.response import Response
 
@@ -111,14 +110,10 @@ class ReviewViewSet(viewsets.ModelViewSet):
 
     serializer_class = ReviewSerializer
     permission_classes = (IsModeratorOrAdminOrReadOnly,)
-    pagination_class = LimitOffsetPagination
     http_method_names = ('get', 'post', 'patch', 'delete')
 
     def title_for_reviews(self):
-        return get_object_or_404(
-            Title,
-            pk=self.kwargs.get('title_id')
-        )
+        return get_object_or_404(Title, pk=self.kwargs.get('title_id'))
 
     def get_queryset(self):
         return self.title_for_reviews().reviews.all()
@@ -135,7 +130,6 @@ class CommentViewSet(viewsets.ModelViewSet):
 
     serializer_class = CommentSerializer
     permission_classes = (IsModeratorOrAdminOrReadOnly,)
-    pagination_class = LimitOffsetPagination
     http_method_names = ('get', 'post', 'patch', 'delete')
 
     def commented_review(self):
