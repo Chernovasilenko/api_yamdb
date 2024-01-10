@@ -22,6 +22,7 @@ from .serializers import (
     TitleGetSerializer, TitleEditSerializer,
     UserSerializer, CreateUserSerializer,
     ReviewSerializer, CommentSerializer,
+    TokenSerializer
 )
 from reviews.models import Category, Genre, Title, Review, User
 
@@ -52,24 +53,6 @@ class UserViewSet(viewsets.GenericViewSet,
         serializer.save(role=request.user.role)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-    @action(detail=False,
-            methods=['post'],
-            permission_classes=(permissions.AllowAny,))
-    def make_token(request):
-        confirmation_code = PasswordResetTokenGenerator().make_token(request.user)
-        return Response(
-            {'confirmation_code': confirmation_code},
-            status=status.HTTP_200_OK
-        )
-
-    def check_token(request):
-        confirmation_code = request.data.get('confirmation_code')
-        if confirmation_code is None:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
-        if not PasswordResetTokenGenerator().check_token(request.user, confirmation_code):
-            return Response(status=status.HTTP_400_BAD_REQUEST)
-        return Response(status=status.HTTP_200_OK)
-
 
 @api_view(['POST'])
 def sign_up(self, request):
@@ -92,7 +75,7 @@ def sign_up(self, request):
 
 @api_view(['POST'])
 def check_code(self, request):
-    serializer = CreateUserSerializer(data=request.data)
+    serializer = TokenSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
     username = serializer.validated_data['username']
     email = serializer.validated_data['email']

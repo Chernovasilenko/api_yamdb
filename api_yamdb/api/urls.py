@@ -1,9 +1,6 @@
-from api import views
-from api import views
 from django.urls import include, path
 from rest_framework import routers
 
-from api import views
 from api import views
 
 router_v1 = routers.DefaultRouter()
@@ -25,4 +22,6 @@ router_v1.register(
 
 urlpatterns = [
     path('v1/', include(router_v1.urls)),
+    path('v1/auth/signup/', views.sign_up, name='signup'),
+    path('v1/auth/token/', views.check_code, name='token'),
 ]

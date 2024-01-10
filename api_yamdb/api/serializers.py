@@ -44,21 +44,25 @@ class CreateUserSerializer(serializers.ModelSerializer):
         ]
 
     def validate_new_user(self, data):
-        if User.objects.filter(username=data['username']).exists():
+        if (User.objects.filter(username=data['username']).exists() or
+                data.get['username'] == 'me'):
             raise serializers.ValidationError(
                 'Пользователь с таким именем уже существует.'
+                'Имя пользователя "me" запрещено.'
             )
         return data
 
-    # Нужна ли здесь проверка на уникальность email?
-    # На мой взгляд мы должны предусмотреть создание пользователя
-    # с уникальным email.
-    def validate(self, data):
+    def validate_email(self, data):
         if User.objects.filter(email=data['email']).exists():
             raise serializers.ValidationError(
                 'Пользователь с таким email уже существует.'
             )
         return data
+
+
+class TokenSerializer(serializers.Serializer):
+    username = serializers.CharField(max_length=150, required=True)
+    confirmation_code = serializers.CharField(required=True)
 
 
 class CategorySerializer(serializers.ModelSerializer):
