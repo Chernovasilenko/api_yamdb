@@ -44,8 +44,8 @@ class CreateUserSerializer(serializers.ModelSerializer):
         ]
 
     def validate_new_user(self, data):
-        if (User.objects.filter(username=data['username']).exists() or
-                data.get['username'] == 'me'):
+        if (User.objects.filter(username=data['username']).exists()
+                or data.get['username'] == 'me'):
             raise serializers.ValidationError(
                 'Пользователь с таким именем уже существует.'
                 'Имя пользователя "me" запрещено.'
