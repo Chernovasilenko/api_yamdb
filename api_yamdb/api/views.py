@@ -23,6 +23,7 @@ from .serializers import (
     UserSerializer, CreateUserSerializer,
     ReviewSerializer, CommentSerializer,
     TokenSerializer
+    TokenSerializer
 )
 from reviews.models import Category, Genre, Title, User
 
@@ -109,7 +110,7 @@ def sign_up(self, request):
 
 @api_view(['POST'])
 def check_code(self, request):
-    serializer = CreateUserSerializer(data=request.data)
+    serializer = TokenSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
     username = serializer.validated_data['username']
     email = serializer.validated_data['email']
