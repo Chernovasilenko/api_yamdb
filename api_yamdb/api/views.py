@@ -4,7 +4,7 @@ from django.db.models import Avg
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 
-from rest_framework.decorators import action, api_view
+from rest_framework.decorators import api_view, action
 from rest_framework import permissions, viewsets, mixins, status
 from rest_framework.response import Response
 
@@ -28,16 +28,13 @@ from reviews.models import Category, Genre, Title, Review, User
 class UserViewSet(viewsets.GenericViewSet,
                   mixins.CreateModelMixin,
                   mixins.ListModelMixin,
-                  mixins.RetrieveModelMixin
                   ):
 
     queryset = User.objects.all()
     serializer_class = UserSerializer
-    permission_classes = (IsAdmin,)
+    permission_classes = (IsAdmin, permissions.IsAuthenticated,)
 
-    @action(detail=False,
-            methods=['get', 'patch'],
-            permission_classes=(permissions.IsAuthenticated,))
+    @action(detail=False, methods=['get', 'patch'])
     def get_user_data(self, request):
         """
         Метод для получения данных пользователя и редактирования.
@@ -45,14 +42,18 @@ class UserViewSet(viewsets.GenericViewSet,
         if request.method == 'GET':
             serializer = UserSerializer(self.request.user)
             return Response(serializer.data, status=status.HTTP_200_OK)
-        serializer = UserSerializer(self.request.user, data=request.data)
+        serializer = UserSerializer(
+            request.user,
+            data=request.data,
+            partial=True
+        )
         serializer.is_valid(raise_exception=True)
         serializer.save(role=request.user.role)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 @api_view(['POST'])
-def sign_up(self, request):
+def sign_up(request):
     serializer = CreateUserSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
     username = serializer.validated_data['username']
@@ -71,7 +72,7 @@ def sign_up(self, request):
 
 
 @api_view(['POST'])
-def check_code(self, request):
+def check_code(request):
     serializer = TokenSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
     username = serializer.validated_data['username']

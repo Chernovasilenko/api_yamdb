@@ -1,6 +1,9 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
-from django.core.validators import MaxValueValidator, MinValueValidator
+from django.core.validators import (
+    RegexValidator, MaxValueValidator,
+    MinValueValidator
+)
 from django.db import models
 from django.utils import timezone
 
@@ -21,7 +24,13 @@ class User(AbstractUser):
         max_length=150,
         unique=True,
         verbose_name='Имя пользователя',
-        blank=True
+        blank=True,
+        validators=[
+            RegexValidator(
+                regex=r'^[\w.@+-]+\Z',
+                message='Имя пользователя содержит недопустимые символы',
+            )
+        ]
     )
     first_name = models.CharField(
         max_length=150,

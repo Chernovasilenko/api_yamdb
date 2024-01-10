@@ -1,4 +1,3 @@
-from django.core.validators import RegexValidator
 from django.utils import timezone
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
@@ -20,10 +19,15 @@ class UserSerializer(serializers.ModelSerializer):
             'role',
         )
 
+    def validate(self, username):
+        if username == 'me':
+            raise serializers.ValidationError(
+                'Имя пользователя "me" запрещено.'
+            )
+        return username
 
-class CreateUserSerializer(serializers.ModelSerializer):
-    username = serializers.CharField(required=True)
-    email = serializers.EmailField(required=True)
+
+class CreateUserSerializer(serializers.Serializer):
 
     class Meta:
         model = User
@@ -32,28 +36,25 @@ class CreateUserSerializer(serializers.ModelSerializer):
             'email',
             'first_name',
             'last_name',
-            'role',
+            'role'
         )
-        validators = [
-            RegexValidator(
-                regex=r'^[\w.@+-]+$',
-                message=(
-                    'Недопустимые символы в имени пользователя!'
-                )
-            )
-        ]
 
-    def validate_new_user(self, data):
-        if (User.objects.filter(username=data['username']).exists()
-                or data.get['username'] == 'me'):
+    def validate_me(self, data):
+        if data.get('username') == 'me':
             raise serializers.ValidationError(
-                'Пользователь с таким именем уже существует.'
                 'Имя пользователя "me" запрещено.'
             )
         return data
 
-    def validate_email(self, data):
-        if User.objects.filter(email=data['email']).exists():
+    def validate_same_user(self, data):
+        if User.objects.filter(username=data.get('username')):
+            raise serializers.ValidationError(
+                'Пользователь с таким именем уже занят.'
+            )
+        return data
+
+    def validate_same_email(self, data):
+        if User.objects.filter(email=data.get('email')):
             raise serializers.ValidationError(
                 'Пользователь с таким email уже существует.'
             )
