@@ -5,7 +5,8 @@ from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 
 from rest_framework.decorators import api_view, action
-from rest_framework import permissions, viewsets, mixins, status
+from rest_framework import viewsets, status
+from rest_framework.filters import SearchFilter
 from rest_framework.response import Response
 
 from .filters import TitleFilter
@@ -25,14 +26,13 @@ from .serializers import (
 from reviews.models import Category, Genre, Title, Review, User
 
 
-class UserViewSet(viewsets.GenericViewSet,
-                  mixins.CreateModelMixin,
-                  mixins.ListModelMixin,
-                  ):
+class UserViewSet(viewsets.ModelViewSet):
 
     queryset = User.objects.all()
     serializer_class = UserSerializer
-    permission_classes = (IsAdmin, permissions.IsAuthenticated,)
+    permission_classes = (IsAdmin,)
+    filter_backends = (SearchFilter,)
+    lookup_field = 'username'
 
     @action(detail=False, methods=['get', 'patch'])
     def get_user_data(self, request):
@@ -43,7 +43,7 @@ class UserViewSet(viewsets.GenericViewSet,
             serializer = UserSerializer(self.request.user)
             return Response(serializer.data, status=status.HTTP_200_OK)
         serializer = UserSerializer(
-            request.user,
+            self.request.user,
             data=request.data,
             partial=True
         )
@@ -58,6 +58,11 @@ def sign_up(request):
     serializer.is_valid(raise_exception=True)
     username = serializer.validated_data['username']
     email = serializer.validated_data['email']
+    if (
+        User.objects.filter(username=username).exists()
+        or User.objects.filter(email=email).exists()
+    ):
+        return Response(status=status.HTTP_400_BAD_REQUEST)
     user, confirmation_code = User.objects.get_or_create(
         username=username,
         email=email
@@ -66,8 +71,12 @@ def sign_up(request):
     user.confirmation_code = confirmation_code
     user.save()
     send_mail(
-        'Код подтверждения',
-        f'{confirmation_code}',)
+        subject='Код подтверждения',
+        message=f'Ваш код подтверждения: {confirmation_code}',
+        from_email='yamdb_email@yamdb.ru',
+        recipient_list=[email],
+        fail_silently=False
+    )
     return Response(serializer.data, status=status.HTTP_200_OK)
 
 
@@ -76,8 +85,7 @@ def check_code(request):
     serializer = TokenSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
     username = serializer.validated_data['username']
-    email = serializer.validated_data['email']
-    user = get_object_or_404(User, username=username, email=email)
+    user = get_object_or_404(User, username=username)
     confirmation_code = serializer.validated_data['confirmation_code']
     if not PasswordResetTokenGenerator().check_token(user, confirmation_code):
         return Response(status=status.HTTP_400_BAD_REQUEST)

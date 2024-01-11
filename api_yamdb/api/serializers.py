@@ -1,3 +1,5 @@
+from django.core.validators import RegexValidator
+from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.utils import timezone
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
@@ -28,6 +30,16 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class CreateUserSerializer(serializers.Serializer):
+    username = serializers.CharField(
+        max_length=150,
+        required=True,
+        validators=[
+            RegexValidator(
+                regex=r'^[\w.@+-]+\Z',
+                message='Имя пользователя содержит недопустимые символы',
+            )
+        ])
+    email = serializers.EmailField(max_length=254, required=True)
 
     class Meta:
         model = User
@@ -39,31 +51,37 @@ class CreateUserSerializer(serializers.Serializer):
             'role'
         )
 
-    def validate_me(self, data):
-        if data.get('username') == 'me':
+    def validate_username(self, username):
+        if username == 'me':
             raise serializers.ValidationError(
                 'Имя пользователя "me" запрещено.'
             )
-        return data
-
-    def validate_same_user(self, data):
-        if User.objects.filter(username=data.get('username')):
-            raise serializers.ValidationError(
-                'Пользователь с таким именем уже занят.'
+        if User.objects.filter(username=username):
+            raise ValidationError(
+                'Пользователь с таким именем уже существует.'
             )
-        return data
+        return username
 
-    def validate_same_email(self, data):
-        if User.objects.filter(email=data.get('email')):
+    def validate_email(self, emeil):
+        if User.objects.filter(email=emeil):
             raise serializers.ValidationError(
                 'Пользователь с таким email уже существует.'
             )
-        return data
+        return emeil
 
 
 class TokenSerializer(serializers.Serializer):
     username = serializers.CharField(max_length=150, required=True)
     confirmation_code = serializers.CharField(required=True)
+
+    def validate(self, data):
+        user = get_object_or_404(User, username=data['username'])
+        if not PasswordResetTokenGenerator().check_token(
+            user,
+            data['confirmation_code']
+        ):
+            raise ValidationError('Неверный код подтверждения')
+        return data
 
 
 class CategorySerializer(serializers.ModelSerializer):
