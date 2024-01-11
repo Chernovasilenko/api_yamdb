@@ -58,11 +58,6 @@ def sign_up(request):
     serializer.is_valid(raise_exception=True)
     username = serializer.validated_data['username']
     email = serializer.validated_data['email']
-    if (
-        User.objects.filter(username=username).exists()
-        or User.objects.filter(email=email).exists()
-    ):
-        return Response(status=status.HTTP_400_BAD_REQUEST)
     user, confirmation_code = User.objects.get_or_create(
         username=username,
         email=email

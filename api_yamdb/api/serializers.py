@@ -18,56 +18,58 @@ class UserSerializer(serializers.ModelSerializer):
             'email',
             'first_name',
             'last_name',
+            'bio',
             'role',
         )
 
-    def validate(self, username):
-        if username == 'me':
+    def validate(self, data):
+        if data.get('username') == 'me':
             raise serializers.ValidationError(
                 'Имя пользователя "me" запрещено.'
             )
-        return username
+        return data
 
 
 class CreateUserSerializer(serializers.Serializer):
     username = serializers.CharField(
         max_length=150,
-        required=True,
         validators=[
             RegexValidator(
                 regex=r'^[\w.@+-]+\Z',
                 message='Имя пользователя содержит недопустимые символы',
             )
         ])
-    email = serializers.EmailField(max_length=254, required=True)
+    email = serializers.EmailField(max_length=254)
 
     class Meta:
         model = User
         fields = (
             'username',
-            'email',
-            'first_name',
-            'last_name',
-            'role'
+            'email'
         )
 
-    def validate_username(self, username):
-        if username == 'me':
+    def validate(self, data):
+        if data.get('username') == 'me':
             raise serializers.ValidationError(
                 'Имя пользователя "me" запрещено.'
             )
-        if User.objects.filter(username=username):
-            raise ValidationError(
+        email = data.get('email')
+        username = data.get('username')
+        if (
+            User.objects.filter(username=username).exists()
+            and not User.objects.filter(email=email).exists()
+        ):
+            raise serializers.ValidationError(
                 'Пользователь с таким именем уже существует.'
             )
-        return username
-
-    def validate_email(self, emeil):
-        if User.objects.filter(email=emeil):
+        if (
+            not User.objects.filter(username=username).exists()
+            and User.objects.filter(email=email).exists()
+        ):
             raise serializers.ValidationError(
                 'Пользователь с таким email уже существует.'
             )
-        return emeil
+        return data
 
 
 class TokenSerializer(serializers.Serializer):
