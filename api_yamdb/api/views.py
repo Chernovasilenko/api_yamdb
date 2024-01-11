@@ -33,8 +33,9 @@ class UserViewSet(viewsets.ModelViewSet):
     permission_classes = (IsAdmin,)
     filter_backends = (SearchFilter,)
     lookup_field = 'username'
+    search_fields = ('username',)
 
-    @action(detail=False, methods=['get', 'patch'])
+    @action(detail=False, methods=['GET', 'PATCH'])
     def get_user_data(self, request):
         """
         Метод для получения данных пользователя и редактирования.
@@ -43,7 +44,7 @@ class UserViewSet(viewsets.ModelViewSet):
             serializer = UserSerializer(self.request.user)
             return Response(serializer.data, status=status.HTTP_200_OK)
         serializer = UserSerializer(
-            self.request.user,
+            request.user,
             data=request.data,
             partial=True
         )
