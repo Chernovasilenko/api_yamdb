@@ -5,7 +5,7 @@ from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 
 from rest_framework.decorators import api_view, action
-from rest_framework import viewsets, status
+from rest_framework import viewsets, status, permissions
 from rest_framework.filters import SearchFilter
 from rest_framework.response import Response
 
@@ -34,22 +34,27 @@ class UserViewSet(viewsets.ModelViewSet):
     filter_backends = (SearchFilter,)
     lookup_field = 'username'
     search_fields = ('username',)
+    http_method_names = ['get', 'post', 'patch', 'delete']
 
-    @action(detail=False, methods=['GET', 'PATCH'])
+    @action(detail=False,
+            methods=['get', 'patch'],
+            url_path='me',
+            url_name='me',
+            permission_classes=(permissions.IsAuthenticated,))
     def get_user_data(self, request):
         """
         Метод для получения данных пользователя и редактирования.
         """
-        if request.method == 'GET':
-            serializer = UserSerializer(self.request.user)
+        if request.method == 'PATCH':
+            serializer = CreateUserSerializer(
+                request.user,
+                data=request.data,
+                partial=True
+            )
+            serializer.is_valid(raise_exception=True)
+            serializer.save(role=request.user.role)
             return Response(serializer.data, status=status.HTTP_200_OK)
-        serializer = UserSerializer(
-            request.user,
-            data=request.data,
-            partial=True
-        )
-        serializer.is_valid(raise_exception=True)
-        serializer.save(role=request.user.role)
+        serializer = UserSerializer(request.user)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 

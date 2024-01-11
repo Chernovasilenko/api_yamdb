@@ -49,7 +49,7 @@ class User(AbstractUser):
     )
     bio = models.TextField(
         blank=True,
-        verbose_name='Биография',
+        verbose_name='Биография'
     )
     role = models.CharField(
         max_length=100,

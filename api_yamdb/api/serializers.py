@@ -1,4 +1,3 @@
-from django.core.validators import RegexValidator
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.utils import timezone
 from rest_framework import serializers
@@ -19,7 +18,7 @@ class UserSerializer(serializers.ModelSerializer):
             'first_name',
             'last_name',
             'bio',
-            'role',
+            'role'
         )
 
     def validate(self, data):
@@ -30,16 +29,13 @@ class UserSerializer(serializers.ModelSerializer):
         return data
 
 
-class CreateUserSerializer(serializers.Serializer):
-    username = serializers.CharField(
+class CreateUserSerializer(serializers.ModelSerializer):
+    username = serializers.RegexField(
         max_length=150,
-        validators=[
-            RegexValidator(
-                regex=r'^[\w.@+-]+\Z',
-                message='Имя пользователя содержит недопустимые символы',
-            )
-        ])
-    email = serializers.EmailField(max_length=254)
+        required=True,
+        regex=r'^[\w.@+-]+\Z',
+    )
+    email = serializers.EmailField(max_length=254, required=True)
 
     class Meta:
         model = User
