@@ -8,6 +8,8 @@ from rest_framework.decorators import api_view, action
 from rest_framework import viewsets, status, permissions
 from rest_framework.filters import SearchFilter
 from rest_framework.response import Response
+from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework.views import APIView
 
 from .filters import TitleFilter
 from .mixins import GenreCategoryMixin
@@ -81,16 +83,26 @@ def sign_up(request):
     return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-@api_view(['POST'])
-def check_code(request):
-    serializer = TokenSerializer(data=request.data)
-    serializer.is_valid(raise_exception=True)
-    username = serializer.validated_data['username']
-    user = get_object_or_404(User, username=username)
-    confirmation_code = serializer.validated_data['confirmation_code']
-    if not PasswordResetTokenGenerator().check_token(user, confirmation_code):
-        return Response(status=status.HTTP_400_BAD_REQUEST)
-    return Response(status=status.HTTP_200_OK)
+class CheckToken(APIView):
+
+    def check_code(request):
+        serializer = TokenSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        username = serializer.validated_data['username']
+        user = get_object_or_404(User, username=username)
+        confirmation_code = serializer.validated_data['confirmation_code']
+        if not PasswordResetTokenGenerator().check_token(
+            user,
+            confirmation_code
+        ):
+            return Response(
+                {'confirmation_code': 'Неверный код подтверждения'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        return Response(
+            {'token': str(RefreshToken.for_user(user))},
+            status=status.HTTP_200_OK
+        )
 
 
 class GenreViewSet(GenreCategoryMixin):
