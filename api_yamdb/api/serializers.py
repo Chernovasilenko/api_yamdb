@@ -28,20 +28,13 @@ class UserSerializer(serializers.ModelSerializer):
         return data
 
 
-class CreateUserSerializer(serializers.ModelSerializer):
+class CreateUserSerializer(serializers.Serializer):
     username = serializers.RegexField(
         max_length=150,
         required=True,
         regex=r'^[\w.@+-]+\Z',
     )
     email = serializers.EmailField(max_length=254, required=True)
-
-    class Meta:
-        model = User
-        fields = (
-            'username',
-            'email'
-        )
 
     def validate(self, data):
         if data.get('username') == 'me':
@@ -50,20 +43,13 @@ class CreateUserSerializer(serializers.ModelSerializer):
             )
         email = data.get('email')
         username = data.get('username')
-        if (
-            User.objects.filter(username=username).exists()
-            and not User.objects.filter(email=email).exists()
-        ):
-            raise serializers.ValidationError(
-                'Пользователь с таким именем уже существует.'
-            )
-        if (
-            not User.objects.filter(username=username).exists()
-            and User.objects.filter(email=email).exists()
-        ):
-            raise serializers.ValidationError(
-                'Пользователь с таким email уже существует.'
-            )
+        if not User.objects.filter(username=username, email=email).exists():
+            if User.objects.filter(username=username):
+                raise ValidationError(
+                    'Пользователь с таким именем уже существует'
+                )
+            if User.objects.filter(email=email):
+                raise ValidationError('Пользователь с таким email существует')
         return data
 
 
@@ -91,18 +77,13 @@ class GenreSerializer(serializers.ModelSerializer):
 class TitleGetSerializer(serializers.ModelSerializer):
     """Сериализатор для получения произведений."""
 
-    category = CategorySerializer()
-    genre = GenreSerializer(many=True)
-    rating = serializers.IntegerField(default=1)  #
+    category = CategorySerializer(read_only=True)
+    genre = GenreSerializer(read_only=True, many=True)
+    rating = serializers.IntegerField(read_only=True)  #
 
     class Meta:
         model = Title
-        fields = (
-            'id', 'name', 'description', 'year', 'genre', 'category', 'rating'
-        )
-        read_only_fields = (
-            'id', 'name', 'description', 'year', 'genre', 'category', 'rating'
-        )
+        fields = '__all__'
 
 
 class TitleEditSerializer(serializers.ModelSerializer):
@@ -117,13 +98,10 @@ class TitleEditSerializer(serializers.ModelSerializer):
         queryset=Genre.objects.all(),
         many=True
     )
-    rating = serializers.IntegerField(required=False)
 
     class Meta:
         model = Title
-        fields = (
-            'id', 'name', 'description', 'year', 'genre', 'category', 'rating'
-        )
+        fields = '__all__'
 
     def validate_year(self, value):
         """Проверка допустимости значения года."""
