@@ -24,7 +24,7 @@ class User(AbstractUser):
         max_length=150,
         unique=True,
         verbose_name='Имя пользователя',
-        blank=True,
+        blank=False,
         validators=[
             RegexValidator(
                 regex=r'^[\w.@+-]+\Z',

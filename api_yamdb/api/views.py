@@ -46,7 +46,7 @@ class UserViewSet(viewsets.ModelViewSet):
         Метод для получения данных пользователя и редактирования.
         """
         if request.method == 'PATCH':
-            serializer = CreateUserSerializer(
+            serializer = UserSerializer(
                 request.user,
                 data=request.data,
                 partial=True

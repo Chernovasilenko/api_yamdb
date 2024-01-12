@@ -1,4 +1,3 @@
-from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.utils import timezone
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
@@ -71,15 +70,6 @@ class CreateUserSerializer(serializers.ModelSerializer):
 class TokenSerializer(serializers.Serializer):
     username = serializers.CharField(max_length=150, required=True)
     confirmation_code = serializers.CharField(required=True)
-
-    def validate(self, data):
-        user = get_object_or_404(User, username=data['username'])
-        if not PasswordResetTokenGenerator().check_token(
-            user,
-            data['confirmation_code']
-        ):
-            raise ValidationError('Неверный код подтверждения')
-        return data
 
 
 class CategorySerializer(serializers.ModelSerializer):
