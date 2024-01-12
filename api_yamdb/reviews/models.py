@@ -1,6 +1,9 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
-from django.core.validators import MaxValueValidator, MinValueValidator
+from django.core.validators import (
+    RegexValidator, MaxValueValidator,
+    MinValueValidator
+)
 from django.db import models
 from django.utils import timezone
 
@@ -9,7 +12,6 @@ from core import constants
 
 class User(AbstractUser):
     """Модель кастомных пользователей."""
-
     USER = 'user'
     ADMIN = 'admin'
     MODERATOR = 'moderator'
@@ -22,7 +24,13 @@ class User(AbstractUser):
         max_length=150,
         unique=True,
         verbose_name='Имя пользователя',
-        blank=True
+        blank=False,
+        validators=[
+            RegexValidator(
+                regex=r'^[\w.@+-]+\Z',
+                message='Имя пользователя содержит недопустимые символы',
+            )
+        ]
     )
     first_name = models.CharField(
         max_length=150,
@@ -41,7 +49,7 @@ class User(AbstractUser):
     )
     bio = models.TextField(
         blank=True,
-        verbose_name='Биография',
+        verbose_name='Биография'
     )
     role = models.CharField(
         max_length=100,
@@ -155,7 +163,6 @@ class Title(models.Model):
     )
     genre = models.ManyToManyField(
         Genre,
-        through='GenreTitle',
         verbose_name='Жанр',
     )
     category = models.ForeignKey(

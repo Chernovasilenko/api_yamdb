@@ -1,4 +1,3 @@
-from django.core.validators import RegexValidator
 from django.utils import timezone
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
@@ -17,48 +16,60 @@ class UserSerializer(serializers.ModelSerializer):
             'email',
             'first_name',
             'last_name',
-            'role',
+            'bio',
+            'role'
         )
+
+    def validate(self, data):
+        if data.get('username') == 'me':
+            raise serializers.ValidationError(
+                'Имя пользователя "me" запрещено.'
+            )
+        return data
 
 
 class CreateUserSerializer(serializers.ModelSerializer):
-    username = serializers.CharField(required=True)
-    email = serializers.EmailField(required=True)
+    username = serializers.RegexField(
+        max_length=150,
+        required=True,
+        regex=r'^[\w.@+-]+\Z',
+    )
+    email = serializers.EmailField(max_length=254, required=True)
 
     class Meta:
         model = User
         fields = (
             'username',
-            'email',
-            'first_name',
-            'last_name',
-            'role',
+            'email'
         )
-        validators = [
-            RegexValidator(
-                regex=r'^[\w.@+-]+$',
-                message=(
-                    'Недопустимые символы в имени пользователя!'
-                )
-            )
-        ]
 
-    def validate_new_user(self, data):
-        if User.objects.filter(username=data['username']).exists():
+    def validate(self, data):
+        if data.get('username') == 'me':
+            raise serializers.ValidationError(
+                'Имя пользователя "me" запрещено.'
+            )
+        email = data.get('email')
+        username = data.get('username')
+        if (
+            User.objects.filter(username=username).exists()
+            and not User.objects.filter(email=email).exists()
+        ):
             raise serializers.ValidationError(
                 'Пользователь с таким именем уже существует.'
             )
-        return data
-
-    # Нужна ли здесь проверка на уникальность email?
-    # На мой взгляд мы должны предусмотреть создание пользователя
-    # с уникальным email.
-    def validate(self, data):
-        if User.objects.filter(email=data['email']).exists():
+        if (
+            not User.objects.filter(username=username).exists()
+            and User.objects.filter(email=email).exists()
+        ):
             raise serializers.ValidationError(
                 'Пользователь с таким email уже существует.'
             )
         return data
+
+
+class TokenSerializer(serializers.Serializer):
+    username = serializers.CharField(max_length=150, required=True)
+    confirmation_code = serializers.CharField(required=True)
 
 
 class CategorySerializer(serializers.ModelSerializer):
