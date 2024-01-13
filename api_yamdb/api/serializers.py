@@ -77,13 +77,18 @@ class GenreSerializer(serializers.ModelSerializer):
 class TitleGetSerializer(serializers.ModelSerializer):
     """Сериализатор для получения произведений."""
 
-    category = CategorySerializer(read_only=True)
-    genre = GenreSerializer(read_only=True, many=True)
-    rating = serializers.IntegerField(read_only=True)  #
+    category = CategorySerializer()
+    genre = GenreSerializer(many=True)
+    rating = serializers.IntegerField()  #
 
     class Meta:
         model = Title
-        fields = '__all__'
+        fields = (
+            'id', 'name', 'description', 'year', 'genre', 'category', 'rating'
+        )
+        read_only_fields = (
+            'id', 'name', 'description', 'year', 'genre', 'category', 'rating'
+        )
 
 
 class TitleEditSerializer(serializers.ModelSerializer):
@@ -98,10 +103,13 @@ class TitleEditSerializer(serializers.ModelSerializer):
         queryset=Genre.objects.all(),
         many=True
     )
+    rating = serializers.IntegerField(required=False)
 
     class Meta:
         model = Title
-        fields = '__all__'
+        fields = (
+            'id', 'name', 'description', 'year', 'genre', 'category', 'rating'
+        )
 
     def validate_year(self, value):
         """Проверка допустимости значения года."""

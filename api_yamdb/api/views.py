@@ -9,7 +9,6 @@ from rest_framework import viewsets, status
 from rest_framework.filters import SearchFilter
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import AccessToken
 
 from . import serializers
@@ -70,27 +69,6 @@ def sign_up(request):
         fail_silently=False
     )
     return Response(serializer.data, status=status.HTTP_200_OK)
-
-
-class SignUp(APIView):
-    def post(self, request):
-        serializer = serializers.CreateUserSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        email = serializer.validated_data['email']
-        user, _ = User.objects.get_or_create(
-            **serializer.validated_data
-        )
-        confirmation_code = PasswordResetTokenGenerator().make_token(user)
-        user.confirmation_code = confirmation_code
-        user.save()
-        send_mail(
-            subject='Код подтверждения',
-            message=f'Ваш код подтверждения: {confirmation_code}',
-            from_email='yamdb_email@yamdb.ru',
-            recipient_list=(email,),
-            fail_silently=False
-        )
-        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 @api_view(('POST',))
