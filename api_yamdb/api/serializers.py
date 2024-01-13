@@ -1,10 +1,13 @@
+from django.contrib.auth import get_user_model
 from django.utils import timezone
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 from rest_framework.generics import get_object_or_404
 
-from core import constants
-from reviews.models import Category, Comments, Genre, Title, User, Review
+from core import constants as const
+from reviews.models import Category, Comments, Genre, Title, Review
+
+User = get_user_model()
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -30,11 +33,14 @@ class UserSerializer(serializers.ModelSerializer):
 
 class CreateUserSerializer(serializers.Serializer):
     username = serializers.RegexField(
-        max_length=150,
+        max_length=const.MAX_LENGHT_NAME_FIELD,
         required=True,
         regex=r'^[\w.@+-]+\Z',
     )
-    email = serializers.EmailField(max_length=254, required=True)
+    email = serializers.EmailField(
+        max_length=const.MAX_LENGHT_EMEIL_FIELD,
+        required=True
+    )
 
     def validate(self, data):
         if data.get('username') == 'me':
@@ -54,7 +60,10 @@ class CreateUserSerializer(serializers.Serializer):
 
 
 class TokenSerializer(serializers.Serializer):
-    username = serializers.CharField(max_length=150, required=True)
+    username = serializers.CharField(
+        max_length=const.MAX_LENGHT_NAME_FIELD,
+        required=True
+    )
     confirmation_code = serializers.CharField(required=True)
 
 
@@ -118,7 +127,7 @@ class TitleEditSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(
                 'Год произведения не может быть больше текущего!'
             )
-        if (value < constants.MIN_VALUE):
+        if (value < const.MIN_VALUE):
             raise serializers.ValidationError(
                 'Год произведения не может быть ниже 1!'
             )

@@ -1,5 +1,5 @@
 from django.core.mail import send_mail
-from django.contrib.auth.tokens import PasswordResetTokenGenerator
+from django.contrib.auth.tokens import default_token_generator
 from django.db.models import Avg
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
@@ -19,6 +19,7 @@ from reviews.models import Category, Genre, Title, Review, User
 
 
 class UserViewSet(viewsets.ModelViewSet):
+    """Вьюсет для работы с пользователями."""
 
     queryset = User.objects.all()
     serializer_class = serializers.UserSerializer
@@ -50,6 +51,7 @@ class UserViewSet(viewsets.ModelViewSet):
 
 @api_view(('POST',))
 def sign_up(request):
+    """Создание пользователя."""
     serializer = serializers.CreateUserSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
     username = serializer.validated_data['username']
@@ -58,9 +60,7 @@ def sign_up(request):
         username=username,
         email=email
     )
-    confirmation_code = PasswordResetTokenGenerator().make_token(user)
-    user.confirmation_code = confirmation_code
-    user.save()
+    confirmation_code = default_token_generator.make_token(user)
     send_mail(
         subject='Код подтверждения',
         message=f'Ваш код подтверждения: {confirmation_code}',
@@ -73,12 +73,13 @@ def sign_up(request):
 
 @api_view(('POST',))
 def check_code(request):
+    """Создание JWT-токена."""
     serializer = serializers.TokenSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
     username = serializer.validated_data['username']
     user = get_object_or_404(User, username=username)
     confirmation_code = serializer.validated_data['confirmation_code']
-    if not PasswordResetTokenGenerator().check_token(user, confirmation_code):
+    if not default_token_generator.check_token(user, confirmation_code):
         return Response(
             {'confirmation_code': 'Неверный код подтверждения'},
             status=status.HTTP_400_BAD_REQUEST
@@ -127,12 +128,15 @@ class ReviewViewSet(viewsets.ModelViewSet):
     http_method_names = ('get', 'post', 'patch', 'delete')
 
     def title_for_reviews(self):
+        """Получение объекта произведения."""
         return get_object_or_404(Title, pk=self.kwargs.get('title_id'))
 
     def get_queryset(self):
+        """Запрос отзывов на произведение."""
         return self.title_for_reviews().reviews.all()
 
     def perform_create(self, serializer):
+        """Создание отзыва с сохранением автора и произведения."""
         serializer.save(
             author=self.request.user,
             title=self.title_for_reviews()
@@ -147,15 +151,19 @@ class CommentViewSet(viewsets.ModelViewSet):
     http_method_names = ('get', 'post', 'patch', 'delete')
 
     def commented_review(self):
+        """Получение объекта комментария."""
         return get_object_or_404(
             Review,
             pk=self.kwargs.get('review_id'),
+            title=self.kwargs.get('title_id')
         )
 
     def get_queryset(self):
+        """Запрос комментариев на отзыв."""
         return self.commented_review().comments.all()
 
     def perform_create(self, serializer):
+        """Создание комментария с сохранением автора и отзыва."""
         serializer.save(
             author=self.request.user,
             review=self.commented_review()
