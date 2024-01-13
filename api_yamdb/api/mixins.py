@@ -16,3 +16,4 @@ class GenreCategoryMixin(
     search_fields = ('name',)
     lookup_field = 'slug'
     permission_classes = (IsAdminOrReadOnly,)
+    filter_backends = (SearchFilter,)

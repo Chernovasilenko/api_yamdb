@@ -7,11 +7,12 @@ from django.core.validators import (
 from django.db import models
 from django.utils import timezone
 
-from core import constants
+from core import constants as const
 
 
 class User(AbstractUser):
     """Модель кастомных пользователей."""
+
     USER = 'user'
     ADMIN = 'admin'
     MODERATOR = 'moderator'
@@ -21,7 +22,7 @@ class User(AbstractUser):
         (MODERATOR, 'moderator'),
     ]
     username = models.CharField(
-        max_length=150,
+        max_length=const.MAX_LENGHT_NAME_FIELD,
         unique=True,
         verbose_name='Имя пользователя',
         blank=False,
@@ -33,17 +34,17 @@ class User(AbstractUser):
         ]
     )
     first_name = models.CharField(
-        max_length=150,
+        max_length=const.MAX_LENGHT_NAME_FIELD,
         blank=True,
         verbose_name='Имя',
     )
     last_name = models.CharField(
-        max_length=150,
+        max_length=const.MAX_LENGHT_NAME_FIELD,
         blank=True,
         verbose_name='Фамилия',
     )
     email = models.EmailField(
-        max_length=254,
+        max_length=const.MAX_LENGHT_EMEIL_FIELD,
         unique=True,
         verbose_name='Электронная почта',
     )
@@ -52,16 +53,10 @@ class User(AbstractUser):
         verbose_name='Биография'
     )
     role = models.CharField(
-        max_length=100,
+        max_length=const.MAX_STR_LENGTH,
         choices=ROLES,
         default='user',
         verbose_name='Роль',
-    )
-    confirmation_code = models.CharField(
-        max_length=100,
-        blank=True,
-        null=True,
-        verbose_name='Код подтверждения',
     )
 
     @property
@@ -77,7 +72,7 @@ class User(AbstractUser):
         return self.role == self.MODERATOR
 
     def __str__(self):
-        return self.username[:constants.MAX_TITLE_LENGTH]
+        return self.username[:const.MAX_STR_LENGTH]
 
 
 class AbstractModelGenreCategory(models.Model):
@@ -85,11 +80,11 @@ class AbstractModelGenreCategory(models.Model):
 
     name = models.CharField(
         verbose_name='Название',
-        max_length=constants.MAX_LENGHT_CHAR_FIELD,
+        max_length=const.MAX_LENGHT_CHAR_FIELD,
     )
     slug = models.SlugField(
         verbose_name='Слаг',
-        max_length=constants.MAX_LENGHT_SLUG_FIELD,
+        max_length=const.MAX_LENGHT_SLUG_FIELD,
         unique=True,
     )
 
@@ -98,7 +93,7 @@ class AbstractModelGenreCategory(models.Model):
         ordering = ('name',)
 
     def __str__(self):
-        return self.name[:constants.MAX_TITLE_LENGTH]
+        return self.name[:const.MAX_STR_LENGTH]
 
 
 class CommentReviewAbstractModel(models.Model):
@@ -142,13 +137,13 @@ class Title(models.Model):
 
     name = models.CharField(
         verbose_name='Название',
-        max_length=constants.MAX_LENGHT_CHAR_FIELD,
+        max_length=const.MAX_LENGHT_CHAR_FIELD,
     )
     year = models.PositiveSmallIntegerField(
         verbose_name='Год создания',
         validators=[
             MinValueValidator(
-                limit_value=constants.MIN_VALUE,
+                limit_value=const.MIN_VALUE,
                 message='Год выпуска не может быть меньше или равен нулю!'
             ),
             MaxValueValidator(
@@ -163,6 +158,7 @@ class Title(models.Model):
     )
     genre = models.ManyToManyField(
         Genre,
+        through='GenreTitle',
         verbose_name='Жанр',
     )
     category = models.ForeignKey(
@@ -180,7 +176,7 @@ class Title(models.Model):
         verbose_name_plural = 'Произведения'
 
     def __str__(self):
-        return self.name[:constants.MAX_TITLE_LENGTH]
+        return self.name[:const.MAX_STR_LENGTH]
 
 
 class GenreTitle(models.Model):
@@ -188,7 +184,7 @@ class GenreTitle(models.Model):
     title = models.ForeignKey(Title, on_delete=models.CASCADE)
 
     def __str__(self):
-        return f'{self.title}: {self.genre}'
+        return f'{self.title}: {self.genre}'[:const.MAX_STR_LENGTH]
 
 
 class Review(CommentReviewAbstractModel):
@@ -202,8 +198,14 @@ class Review(CommentReviewAbstractModel):
     )
     score = models.PositiveSmallIntegerField(
         validators=[
-            MinValueValidator(1, message='Оценка должна быть больше 1'),
-            MaxValueValidator(10, message='Оценка должна быть до 10'),
+            MinValueValidator(
+                const.MIN_VALUE,
+                message='Оценка должна быть не меньше 1'
+            ),
+            MaxValueValidator(
+                const.MAX_VALUE,
+                message='Оценка должна быть не выше 10'
+            ),
         ],
         verbose_name='Рейтинг',
     )
@@ -214,10 +216,10 @@ class Review(CommentReviewAbstractModel):
         ordering = ['-pub_date']
         constraints = [
             models.UniqueConstraint(
-                fields=["author", "title"], name="unique_review")]
+                fields=['author', 'title'], name='unique_review')]
 
     def __str__(self):
-        return self.text[:15]
+        return self.text[:const.MAX_STR_LENGTH]
 
 
 class Comments(CommentReviewAbstractModel):
@@ -236,4 +238,4 @@ class Comments(CommentReviewAbstractModel):
         ordering = ['-pub_date']
 
     def __str__(self):
-        return self.text[:15]
+        return self.text[:const.MAX_STR_LENGTH]
