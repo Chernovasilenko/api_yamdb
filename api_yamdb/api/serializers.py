@@ -11,6 +11,7 @@ User = get_user_model()
 
 
 class UserSerializer(serializers.ModelSerializer):
+    """Сериализатор для работы с пользователями."""
 
     class Meta:
         model = User
@@ -24,6 +25,7 @@ class UserSerializer(serializers.ModelSerializer):
         )
 
     def validate(self, data):
+        """Проверка на допустимость имени пользователя."""
         if data.get('username') == 'me':
             raise serializers.ValidationError(
                 'Имя пользователя "me" запрещено.'
@@ -32,6 +34,8 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class CreateUserSerializer(serializers.Serializer):
+    """Сериализатор для создания пользователя."""
+
     username = serializers.RegexField(
         max_length=const.MAX_LENGHT_NAME_FIELD,
         required=True,
@@ -43,6 +47,7 @@ class CreateUserSerializer(serializers.Serializer):
     )
 
     def validate(self, data):
+        """Проверка на допустимость имени пользователя."""
         if data.get('username') == 'me':
             raise serializers.ValidationError(
                 'Имя пользователя "me" запрещено.'
@@ -60,6 +65,7 @@ class CreateUserSerializer(serializers.Serializer):
 
 
 class TokenSerializer(serializers.Serializer):
+    """Сериализатор для получения токена пользователем."""
     username = serializers.CharField(
         max_length=const.MAX_LENGHT_NAME_FIELD,
         required=True
