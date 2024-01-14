@@ -1,13 +1,17 @@
+from django.contrib.auth import get_user_model
 from django.utils import timezone
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 from rest_framework.generics import get_object_or_404
 
-from core import constants
-from reviews.models import Category, Comments, Genre, Title, User, Review
+from core import constants as const
+from reviews.models import Category, Comments, Genre, Title, Review
+
+User = get_user_model()
 
 
 class UserSerializer(serializers.ModelSerializer):
+    """Сериализатор для работы с пользователями."""
 
     class Meta:
         model = User
@@ -21,6 +25,7 @@ class UserSerializer(serializers.ModelSerializer):
         )
 
     def validate(self, data):
+        """Проверка на допустимость имени пользователя."""
         if data.get('username') == 'me':
             raise serializers.ValidationError(
                 'Имя пользователя "me" запрещено.'
@@ -28,47 +33,43 @@ class UserSerializer(serializers.ModelSerializer):
         return data
 
 
-class CreateUserSerializer(serializers.ModelSerializer):
+class CreateUserSerializer(serializers.Serializer):
+    """Сериализатор для создания пользователя."""
+
     username = serializers.RegexField(
-        max_length=150,
+        max_length=const.MAX_LENGHT_NAME_FIELD,
         required=True,
         regex=r'^[\w.@+-]+\Z',
     )
-    email = serializers.EmailField(max_length=254, required=True)
-
-    class Meta:
-        model = User
-        fields = (
-            'username',
-            'email'
-        )
+    email = serializers.EmailField(
+        max_length=const.MAX_LENGHT_EMEIL_FIELD,
+        required=True
+    )
 
     def validate(self, data):
+        """Проверка на допустимость имени пользователя."""
         if data.get('username') == 'me':
             raise serializers.ValidationError(
                 'Имя пользователя "me" запрещено.'
             )
         email = data.get('email')
         username = data.get('username')
-        if (
-            User.objects.filter(username=username).exists()
-            and not User.objects.filter(email=email).exists()
-        ):
-            raise serializers.ValidationError(
-                'Пользователь с таким именем уже существует.'
-            )
-        if (
-            not User.objects.filter(username=username).exists()
-            and User.objects.filter(email=email).exists()
-        ):
-            raise serializers.ValidationError(
-                'Пользователь с таким email уже существует.'
-            )
+        if not User.objects.filter(username=username, email=email).exists():
+            if User.objects.filter(username=username):
+                raise ValidationError(
+                    'Пользователь с таким именем уже существует'
+                )
+            if User.objects.filter(email=email):
+                raise ValidationError('Пользователь с таким email существует')
         return data
 
 
 class TokenSerializer(serializers.Serializer):
-    username = serializers.CharField(max_length=150, required=True)
+    """Сериализатор для получения токена пользователем."""
+    username = serializers.CharField(
+        max_length=const.MAX_LENGHT_NAME_FIELD,
+        required=True
+    )
     confirmation_code = serializers.CharField(required=True)
 
 
@@ -93,7 +94,7 @@ class TitleGetSerializer(serializers.ModelSerializer):
 
     category = CategorySerializer()
     genre = GenreSerializer(many=True)
-    rating = serializers.IntegerField(default=1)  #
+    rating = serializers.IntegerField()  #
 
     class Meta:
         model = Title
@@ -132,7 +133,7 @@ class TitleEditSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(
                 'Год произведения не может быть больше текущего!'
             )
-        if (value < constants.MIN_VALUE):
+        if (value < const.MIN_VALUE):
             raise serializers.ValidationError(
                 'Год произведения не может быть ниже 1!'
             )
