@@ -1,9 +1,6 @@
 from django.contrib import admin
-from django.contrib.auth import get_user_model
 
-from reviews.models import Category, Genre, Comments, Review, Title
-
-User = get_user_model()
+from reviews.models import Category, Comments, Genre, Review, Title
 
 
 @admin.register(Title)
@@ -28,7 +25,6 @@ class GenreAdmin(admin.ModelAdmin):
     prepopulated_fields = {'slug': ('name',)}
 
 
-admin.site.register(User)
 admin.site.register(Review)
 admin.site.register(Comments)
 

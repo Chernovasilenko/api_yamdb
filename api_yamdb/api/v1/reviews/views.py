@@ -2,12 +2,12 @@ from django.db.models import Avg
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 
-from rest_framework import viewsets
+from rest_framework import mixins, viewsets
 
-from . import serializers
 from .. import permissions
+from . import serializers
 from .filters import TitleFilter
-from .mixins import GenreCategoryMixin
+from .mixins import GenreCategoryMixin, PatchModelMixin
 from reviews.models import Category, Genre, Title, Review
 
 
@@ -25,7 +25,14 @@ class CategoryViewSet(GenreCategoryMixin):
     serializer_class = serializers.CategorySerializer
 
 
-class TitleViewSet(viewsets.ModelViewSet):
+class TitleViewSet(
+    mixins.CreateModelMixin,
+    mixins.ListModelMixin,
+    mixins.RetrieveModelMixin,
+    mixins.DestroyModelMixin,
+    PatchModelMixin,
+    viewsets.GenericViewSet
+):
     """Вьюсет для произведений."""
 
     http_method_names = ('get', 'post', 'patch', 'delete')
@@ -36,7 +43,7 @@ class TitleViewSet(viewsets.ModelViewSet):
 
     def get_serializer_class(self):
         """Выбор сериализатора в зависимости от типа запроса."""
-        if self.request.method == 'GET':
+        if self.action in ('list', 'retrieve'):
             return serializers.TitleGetSerializer
         return serializers.TitleEditSerializer
 
