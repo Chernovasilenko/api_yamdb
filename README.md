@@ -19,14 +19,18 @@ git clone git@github.com:Chernovasilenko/api_yamdb
 cd api_yamdb
 ```
 
-Cоздать и активировать виртуальное окружение:
+Cоздать виртуальное окружение:
+
+Здесь и далее для **Windows** вместо `python3` нужно писать `python`. Для **Linux** и **macOS** команда остаётся такой же.
 
 ```bash
 python3 -m venv venv
 ```
 
+Активировать виртуальное окружение:
+
 ```bash
-source venv/bin/activate
+source venv/scripts/activate
 ```
 
 Установить зависимости из файла requirements.txt:
