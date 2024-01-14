@@ -1,4 +1,5 @@
 from django.core.mail import send_mail
+from django.contrib.auth import get_user_model
 from django.contrib.auth.tokens import default_token_generator
 from django.shortcuts import get_object_or_404
 
@@ -11,7 +12,8 @@ from rest_framework_simplejwt.tokens import AccessToken
 
 from . import serializers
 from .. import permissions
-from reviews.models import User
+
+User = get_user_model()
 
 
 class UserViewSet(viewsets.ModelViewSet):

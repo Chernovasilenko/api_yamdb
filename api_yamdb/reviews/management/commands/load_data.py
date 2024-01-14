@@ -1,11 +1,14 @@
 import csv
 
+from django.contrib.auth import get_user_model
 from django.db.utils import IntegrityError
 from django.core.management.base import BaseCommand, CommandError
 from django.conf import settings
 from reviews.models import (
     Category, Comments, Genre, GenreTitle, Review, Title, User
 )
+
+User = get_user_model()
 
 DATA_DIR = f'{settings.BASE_DIR}\\static\\data\\'
 
