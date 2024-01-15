@@ -35,7 +35,7 @@ class ReviewAdmin(admin.ModelAdmin):
 @admin.register(Comments)
 class CommentAdmin(admin.ModelAdmin):
     list_display = ('pk', 'text', 'author', 'pub_date', 'review', 'review_id')
-    search_fields = ('author')
+    search_fields = ('author',)
 
 
 admin.site.site_title = 'Административный сайт YaMDb'

@@ -1,6 +1,5 @@
-from django.db import models
 from django.contrib.auth.models import AbstractUser
-
+from django.core.exceptions import ValidationError
 from django.db import models
 
 from core import constants as const
@@ -46,7 +45,7 @@ class User(AbstractUser):
     def clean(self):
         super().clean()
         if self.username == 'me':
-            raise models.ValidationError(
+            raise ValidationError(
                 'Имя пользователя "me" запрещено.'
             )
 
