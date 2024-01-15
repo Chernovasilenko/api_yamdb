@@ -1,6 +1,5 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
-from django.core.validators import RegexValidator
 
 from django.db import models
 
@@ -18,18 +17,6 @@ class User(AbstractUser):
         (ADMIN, 'admin'),
         (MODERATOR, 'moderator'),
     ]
-    username = models.CharField(
-        max_length=const.MAX_LENGHT_NAME_FIELD,
-        unique=True,
-        verbose_name='Имя пользователя',
-        blank=False,
-        validators=[
-            RegexValidator(
-                regex=r'^[\w.@+-]+\Z',
-                message='Имя пользователя содержит недопустимые символы',
-            )
-        ]
-    )
     email = models.EmailField(
         max_length=const.MAX_LENGHT_EMEIL_FIELD,
         unique=True,
@@ -56,8 +43,8 @@ class User(AbstractUser):
             )
         ]
 
-    def is_user(self):
-        return self.role == self.USER
+    def __str__(self):
+        return self.username[:const.MAX_STR_LENGTH]
 
     @property
     def is_admin(self):
@@ -73,6 +60,3 @@ class User(AbstractUser):
             raise models.ValidationError(
                 'Имя пользователя "me" запрещено.'
             )
-
-    def __str__(self):
-        return self.username[:const.MAX_STR_LENGTH]
