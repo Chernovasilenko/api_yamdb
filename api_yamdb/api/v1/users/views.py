@@ -4,7 +4,7 @@ from django.contrib.auth.tokens import default_token_generator
 from django.shortcuts import get_object_or_404
 
 from rest_framework.decorators import api_view, action
-from rest_framework import viewsets, status
+from rest_framework import viewsets, status, mixins
 from rest_framework.filters import SearchFilter
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -12,11 +12,20 @@ from rest_framework_simplejwt.tokens import AccessToken
 
 from . import serializers
 from .. import permissions
+from api_yamdb.settings import EMAIL_DEFAULT_FROM
+from api.v1.reviews.mixins import PatchModelMixin
 
 User = get_user_model()
 
 
-class UserViewSet(viewsets.ModelViewSet):
+class UserViewSet(
+    mixins.CreateModelMixin,
+    mixins.ListModelMixin,
+    mixins.RetrieveModelMixin,
+    mixins.DestroyModelMixin,
+    PatchModelMixin,
+    viewsets.GenericViewSet
+):
     """Вьюсет для работы с пользователями."""
 
     queryset = User.objects.all()
@@ -28,29 +37,32 @@ class UserViewSet(viewsets.ModelViewSet):
     http_method_names = ('get', 'post', 'patch', 'delete')
 
     @action(detail=False,
-            methods=('get', 'patch'),
+            methods=('get',),
             url_path='me',
             url_name='me',
             permission_classes=(IsAuthenticated,))
     def get_user_data(self, request):
-        """Получение и редактирование данных пользователя."""
-        if request.method == 'PATCH':
-            serializer = serializers.UserSerializer(
-                request.user,
-                data=request.data,
-                partial=True
-            )
-            serializer.is_valid(raise_exception=True)
-            serializer.save(role=request.user.role)
-            return Response(serializer.data, status=status.HTTP_200_OK)
+        """Получение данных пользователя."""
         serializer = serializers.UserSerializer(request.user)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    @get_user_data.mapping.patch
+    def change_user_data(self, request):
+        """Редактирование данных пользователя."""
+        serializer = serializers.UserSerializer(
+            request.user,
+            data=request.data,
+            partial=True
+        )
+        serializer.is_valid(raise_exception=True)
+        serializer.save(role=request.user.role)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 @api_view(('POST',))
 def sign_up(request):
     """Создание пользователя."""
-    serializer = serializers.CreateUserSerializer(data=request.data)
+    serializer = serializers.UserCreateSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
     username = serializer.validated_data['username']
     email = serializer.validated_data['email']
@@ -62,7 +74,7 @@ def sign_up(request):
     send_mail(
         subject='Код подтверждения',
         message=f'Ваш код подтверждения: {confirmation_code}',
-        from_email='yamdb_email@yamdb.ru',
+        from_email=EMAIL_DEFAULT_FROM,
         recipient_list=(email,),
         fail_silently=False
     )
