@@ -48,7 +48,14 @@ class TitleViewSet(
         return serializers.TitleEditSerializer
 
 
-class ReviewViewSet(viewsets.ModelViewSet):
+class ReviewViewSet(
+    mixins.CreateModelMixin,
+    mixins.ListModelMixin,
+    mixins.RetrieveModelMixin,
+    mixins.DestroyModelMixin,
+    PatchModelMixin,
+    viewsets.GenericViewSet
+):
     """Вьюсет отзывов."""
 
     serializer_class = serializers.ReviewSerializer
@@ -71,7 +78,14 @@ class ReviewViewSet(viewsets.ModelViewSet):
         )
 
 
-class CommentViewSet(viewsets.ModelViewSet):
+class CommentViewSet(
+    mixins.CreateModelMixin,
+    mixins.ListModelMixin,
+    mixins.RetrieveModelMixin,
+    mixins.DestroyModelMixin,
+    PatchModelMixin,
+    viewsets.GenericViewSet
+):
     """Вьюсет комментариев."""
 
     serializer_class = serializers.CommentSerializer

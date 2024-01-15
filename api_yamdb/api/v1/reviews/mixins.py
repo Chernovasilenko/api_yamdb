@@ -28,4 +28,4 @@ class PatchModelMixin(
         if request.method == 'PATCH':
             return super().partial_update(request, *args, **kwargs)
         else:
-            self.permission_denied()
+            self.permission_denied()            
