@@ -43,6 +43,13 @@ class User(AbstractUser):
             )
         ]
 
+    def clean(self):
+        super().clean()
+        if self.username == 'me':
+            raise models.ValidationError(
+                'Имя пользователя "me" запрещено.'
+            )
+
     def __str__(self):
         return self.username[:const.MAX_STR_LENGTH]
 
@@ -53,10 +60,3 @@ class User(AbstractUser):
     @property
     def is_moderator(self):
         return self.role == self.MODERATOR
-
-    def clean(self):
-        super().clean()
-        if self.username == 'me':
-            raise models.ValidationError(
-                'Имя пользователя "me" запрещено.'
-            )
