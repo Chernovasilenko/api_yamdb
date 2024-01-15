@@ -1,10 +1,13 @@
 from django.db import models
+from django.contrib.auth import get_user_model
 from django.core.validators import MaxValueValidator, MinValueValidator
 
 from django.db import models
 from django.utils import timezone
 
 from core import constants as const
+
+User = get_user_model()
 
 
 class AbstractModelGenreCategory(models.Model):
@@ -22,7 +25,6 @@ class AbstractModelGenreCategory(models.Model):
 
     class Meta:
         abstract = True
-        ordering = ('name',)
 
     def __str__(self):
         return self.name[:const.MAX_STR_LENGTH]
@@ -53,6 +55,7 @@ class Genre(AbstractModelGenreCategory):
         verbose_name = 'Жанр'
         verbose_name_plural = 'Жанры'
         default_related_name = 'genres'
+        ordering = ('name',)
 
 
 class Category(AbstractModelGenreCategory):
@@ -62,6 +65,7 @@ class Category(AbstractModelGenreCategory):
         verbose_name = 'Категория'
         verbose_name_plural = 'Категории'
         default_related_name = 'categories'
+        ordering = ('name',)
 
 
 class Title(models.Model):

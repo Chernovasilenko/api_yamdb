@@ -1,11 +1,15 @@
 import csv
 
-from django.db.utils import IntegrityError
-from django.core.management.base import BaseCommand, CommandError
 from django.conf import settings
+from django.contrib.auth import get_user_model
+from django.core.management.base import BaseCommand, CommandError
+from django.db.utils import IntegrityError
+
 from reviews.models import (
-    Category, Comments, Genre, GenreTitle, Review, Title, User
+    Category, Comments, Genre, GenreTitle, Review, Title
 )
+
+User = get_user_model()
 
 DATA_DIR = f'{settings.BASE_DIR}\\static\\data\\'
 
@@ -73,7 +77,7 @@ class Command(BaseCommand):
             for model, file_name in TABLES_FILES.items():
                 error_message = (
                     f'При загрузке данных в таблицу {model.__qualname__} '
-                    f'произошла ошибка: '
+                    'произошла ошибка: '
                 )
                 self.load_data(model, file_name)
         except FileNotFoundError as e:
