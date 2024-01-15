@@ -1,7 +1,6 @@
 from django.db.models import Avg
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
-
 from rest_framework import mixins, viewsets
 
 from .. import permissions
@@ -35,7 +34,6 @@ class TitleViewSet(
 ):
     """Вьюсет для произведений."""
 
-    http_method_names = ('get', 'post', 'patch', 'delete')
     permission_classes = (permissions.IsAdminOrReadOnly,)
     queryset = Title.objects.annotate(rating=Avg('reviews__score'))
     filter_backends = (DjangoFilterBackend,)
@@ -60,7 +58,6 @@ class ReviewViewSet(
 
     serializer_class = serializers.ReviewSerializer
     permission_classes = (permissions.IsModeratorOrAdminOrReadOnly,)
-    http_method_names = ('get', 'post', 'patch', 'delete')
 
     def title_for_reviews(self):
         """Получение объекта произведения."""
@@ -90,7 +87,6 @@ class CommentViewSet(
 
     serializer_class = serializers.CommentSerializer
     permission_classes = (permissions.IsModeratorOrAdminOrReadOnly,)
-    http_method_names = ('get', 'post', 'patch', 'delete')
 
     def commented_review(self):
         """Получение объекта комментария."""
