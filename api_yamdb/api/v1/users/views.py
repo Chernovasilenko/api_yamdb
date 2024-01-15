@@ -12,6 +12,7 @@ from rest_framework_simplejwt.tokens import AccessToken
 
 from . import serializers
 from .. import permissions
+from api_yamdb.settings import EMAIL_DEFAULT_FROM
 
 User = get_user_model()
 
@@ -28,22 +29,25 @@ class UserViewSet(viewsets.ModelViewSet):
     http_method_names = ('get', 'post', 'patch', 'delete')
 
     @action(detail=False,
-            methods=('get', 'patch'),
+            methods=('get',),
             url_path='me',
             url_name='me',
             permission_classes=(IsAuthenticated,))
     def get_user_data(self, request):
-        """Получение и редактирование данных пользователя."""
-        if request.method == 'PATCH':
-            serializer = serializers.UserSerializer(
-                request.user,
-                data=request.data,
-                partial=True
-            )
-            serializer.is_valid(raise_exception=True)
-            serializer.save(role=request.user.role)
-            return Response(serializer.data, status=status.HTTP_200_OK)
+        """Получение данных пользователя."""
         serializer = serializers.UserSerializer(request.user)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    @get_user_data.mapping.patch
+    def change_user_data(self, request):
+        """Редактирование данных пользователя."""
+        serializer = serializers.UserSerializer(
+            request.user,
+            data=request.data,
+            partial=True
+        )
+        serializer.is_valid(raise_exception=True)
+        serializer.save(role=request.user.role)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
@@ -62,7 +66,7 @@ def sign_up(request):
     send_mail(
         subject='Код подтверждения',
         message=f'Ваш код подтверждения: {confirmation_code}',
-        from_email='yamdb_email@yamdb.ru',
+        from_email=EMAIL_DEFAULT_FROM,
         recipient_list=(email,),
         fail_silently=False
     )
