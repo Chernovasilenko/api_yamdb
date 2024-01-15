@@ -20,15 +20,15 @@ class UserSerializer(serializers.ModelSerializer):
             'role'
         )
 
-    def validate(self, data):
-        if data.get('username') == 'me':
+    def validate_username(self, username):
+        if username == 'me':
             raise serializers.ValidationError(
                 'Имя пользователя "me" запрещено.'
             )
-        return data
+        return username
 
 
-class CreateUserSerializer(serializers.Serializer):
+class UserCreateSerializer(serializers.Serializer):
     username = serializers.RegexField(
         max_length=const.MAX_LENGHT_NAME_FIELD,
         required=True,
@@ -39,11 +39,14 @@ class CreateUserSerializer(serializers.Serializer):
         required=True
     )
 
-    def validate(self, data):
-        if data.get('username') == 'me':
+    def validate_username(self, username):
+        if username == 'me':
             raise serializers.ValidationError(
                 'Имя пользователя "me" запрещено.'
             )
+        return username
+
+    def validate(self, data):
         email = data.get('email')
         username = data.get('username')
         if not User.objects.filter(username=username, email=email).exists():

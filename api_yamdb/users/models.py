@@ -30,16 +30,6 @@ class User(AbstractUser):
             )
         ]
     )
-    first_name = models.CharField(
-        max_length=const.MAX_LENGHT_NAME_FIELD,
-        blank=True,
-        verbose_name='Имя',
-    )
-    last_name = models.CharField(
-        max_length=const.MAX_LENGHT_NAME_FIELD,
-        blank=True,
-        verbose_name='Фамилия',
-    )
     email = models.EmailField(
         max_length=const.MAX_LENGHT_EMEIL_FIELD,
         unique=True,
@@ -52,11 +42,20 @@ class User(AbstractUser):
     role = models.CharField(
         max_length=const.MAX_STR_LENGTH,
         choices=ROLES,
-        default='user',
+        default=USER,
         verbose_name='Роль',
     )
 
-    @property
+    class Meta:
+        verbose_name = 'Пользователь'
+        verbose_name_plural = 'Пользователи'
+        constraints = [
+            models.UniqueConstraint(
+                fields=['username', 'email'],
+                name='unique_user'
+            )
+        ]
+
     def is_user(self):
         return self.role == self.USER
 
@@ -67,6 +66,13 @@ class User(AbstractUser):
     @property
     def is_moderator(self):
         return self.role == self.MODERATOR
+
+    def clean(self):
+        super().clean()
+        if self.username == 'me':
+            raise models.ValidationError(
+                'Имя пользователя "me" запрещено.'
+            )
 
     def __str__(self):
         return self.username[:const.MAX_STR_LENGTH]

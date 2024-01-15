@@ -4,7 +4,7 @@ from django.contrib.auth.tokens import default_token_generator
 from django.shortcuts import get_object_or_404
 
 from rest_framework.decorators import api_view, action
-from rest_framework import viewsets, status
+from rest_framework import viewsets, status, mixins
 from rest_framework.filters import SearchFilter
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -13,11 +13,19 @@ from rest_framework_simplejwt.tokens import AccessToken
 from . import serializers
 from .. import permissions
 from api_yamdb.settings import EMAIL_DEFAULT_FROM
+from api.v1.reviews.mixins import PatchModelMixin
 
 User = get_user_model()
 
 
-class UserViewSet(viewsets.ModelViewSet):
+class UserViewSet(
+    mixins.CreateModelMixin,
+    mixins.ListModelMixin,
+    mixins.RetrieveModelMixin,
+    mixins.DestroyModelMixin,
+    PatchModelMixin,
+    viewsets.GenericViewSet
+):
     """Вьюсет для работы с пользователями."""
 
     queryset = User.objects.all()
@@ -54,7 +62,7 @@ class UserViewSet(viewsets.ModelViewSet):
 @api_view(('POST',))
 def sign_up(request):
     """Создание пользователя."""
-    serializer = serializers.CreateUserSerializer(data=request.data)
+    serializer = serializers.UserCreateSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
     username = serializer.validated_data['username']
     email = serializer.validated_data['email']

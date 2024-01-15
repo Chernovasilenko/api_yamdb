@@ -1,3 +1,22 @@
 from django.contrib import admin
 
-# Register your models here.
+from reviews.models import User
+
+
+@admin.register(User)
+class UserAdmin(admin.ModelAdmin):
+    list_display = (
+        'username',
+        'email',
+        'first_name',
+        'last_name',
+        'role',
+    )
+    search_fields = ('username', 'email')
+    raw_id_fields = ('role',)
+    ordering = ('username',)
+
+
+admin.site.site_title = 'Административный сайт YaMDb'
+admin.site.site_header = 'Администрирование YaMDb'
+admin.site.empty_value_display = 'Не задано'
