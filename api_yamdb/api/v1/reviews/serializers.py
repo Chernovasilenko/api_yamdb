@@ -113,6 +113,7 @@ class ReviewSerializer(AuthorMixin, serializers.ModelSerializer):
         ]
 
     def to_internal_value(self, data):
+        '''Проверка запроса на обновление поля сериализатора.'''
         data = super().to_internal_value(data)
         data['title'] = self.context['view'].title_for_reviews()
         return data
