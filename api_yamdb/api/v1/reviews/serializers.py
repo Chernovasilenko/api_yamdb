@@ -1,8 +1,6 @@
 from django.contrib.auth import get_user_model
 from django.utils import timezone
 from rest_framework import serializers
-from rest_framework.exceptions import ValidationError
-from rest_framework.generics import get_object_or_404
 from rest_framework.validators import UniqueTogetherValidator
 
 from core import constants as const
@@ -113,7 +111,7 @@ class ReviewSerializer(AuthorMixin, serializers.ModelSerializer):
         ]
 
     def to_internal_value(self, data):
-        '''Проверка запроса на обновление поля сериализатора.'''
+        """Добавление произведения для последующей проверки в валидаторе."""
         data = super().to_internal_value(data)
         data['title'] = self.context['view'].title_for_reviews()
         return data

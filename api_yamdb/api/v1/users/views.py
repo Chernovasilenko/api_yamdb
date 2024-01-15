@@ -2,7 +2,6 @@ from django.core.mail import send_mail
 from django.contrib.auth import get_user_model
 from django.contrib.auth.tokens import default_token_generator
 from django.shortcuts import get_object_or_404
-
 from rest_framework.decorators import api_view, action
 from rest_framework import viewsets, status, mixins
 from rest_framework.filters import SearchFilter
@@ -34,7 +33,6 @@ class UserViewSet(
     filter_backends = (SearchFilter,)
     lookup_field = 'username'
     search_fields = ('username',)
-    http_method_names = ('get', 'post', 'patch', 'delete')
 
     @action(detail=False,
             methods=('get',),

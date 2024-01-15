@@ -1,5 +1,4 @@
-from rest_framework import mixins, viewsets
-from rest_framework.filters import SearchFilter
+from rest_framework import mixins, viewsets, response, filters
 
 from ..permissions import IsAdminOrReadOnly
 
@@ -12,20 +11,28 @@ class GenreCategoryMixin(
 ):
     """Миксин для жанров и категорий."""
 
-    filter_backends = (SearchFilter,)
+    filter_backends = (filters.SearchFilter,)
     search_fields = ('name',)
     lookup_field = 'slug'
     permission_classes = (IsAdminOrReadOnly,)
-    filter_backends = (SearchFilter,)
 
 
-class PatchModelMixin(
-    mixins.UpdateModelMixin,
-):
-    """Миксин без PUT-запроса."""
+class PatchModelMixin:
+    """Миксин для PATCH-запроса."""
 
     def partial_update(self, request, *args, **kwargs):
-        if request.method == 'PATCH':
-            return super().partial_update(request, *args, **kwargs)
-        else:
-            self.permission_denied()            
+        partial = True
+        instance = self.get_object()
+        serializer = self.get_serializer(
+            instance,
+            data=request.data,
+            partial=partial
+        )
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+        if getattr(instance, '_prefetched_objects_cache', None):
+            instance._prefetched_objects_cache = {}
+        return response.Response(serializer.data)
+
+    def perform_update(self, serializer):
+        serializer.save()

@@ -13,7 +13,6 @@ class UserAdmin(admin.ModelAdmin):
         'role',
     )
     search_fields = ('username', 'email')
-    raw_id_fields = ('role',)
     ordering = ('username',)
 
 
