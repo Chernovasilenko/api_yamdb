@@ -3,6 +3,7 @@ from django.utils import timezone
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 from rest_framework.generics import get_object_or_404
+from rest_framework.validators import UniqueTogetherValidator
 
 from core import constants as const
 from reviews.models import Category, Comments, Genre, Title, Review
@@ -76,8 +77,8 @@ class TitleEditSerializer(serializers.ModelSerializer):
         return value
 
 
-class AuthorSerializer(serializers.ModelSerializer):
-    """Сериализатор автора."""
+class AuthorMixin(serializers.Serializer):
+    """Миксин автора."""
 
     author = serializers.SlugRelatedField(
         read_only=True,
@@ -86,7 +87,7 @@ class AuthorSerializer(serializers.ModelSerializer):
     )
 
 
-class CommentSerializer(AuthorSerializer):
+class CommentSerializer(AuthorMixin, serializers.ModelSerializer):
     """Сериализатор комментариев."""
 
     class Meta:
@@ -95,23 +96,23 @@ class CommentSerializer(AuthorSerializer):
         read_only_fields = ('review', 'author')
 
 
-class ReviewSerializer(AuthorSerializer):
+class ReviewSerializer(AuthorMixin, serializers.ModelSerializer):
     """Сериализатор отзывов."""
-
-    def validate(self, data):
-        """Валидация отзыва."""
-        request = self.context['request']
-        author = request.user
-        title_id = self.context.get('view').kwargs.get('title_id')
-        title = get_object_or_404(Title, pk=title_id)
-        if (
-            request.method == 'POST'
-            and title.reviews.filter(author=author).exists()
-        ):
-            raise ValidationError('Вы уже оставили отзыв!')
-        return data
 
     class Meta:
         fields = '__all__'
         model = Review
         read_only_fields = ('title', 'author')
+
+        validators = [
+            UniqueTogetherValidator(
+                queryset=Review.objects.all(),
+                fields=('author', 'title'),
+                message='Вы уже оставили отзыв!'
+            )
+        ]
+
+    def to_internal_value(self, data):
+        data = super().to_internal_value(data)
+        data['title'] = self.context['view'].title_for_reviews()
+        return data
