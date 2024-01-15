@@ -23,7 +23,7 @@ class GenreAdmin(admin.ModelAdmin):
     list_display = ('id', 'name', 'slug')
     search_fields = ('name', 'slug')
     prepopulated_fields = {'slug': ('name',)}
-    
+
 
 @admin.register(Review)
 class ReviewAdmin(admin.ModelAdmin):
