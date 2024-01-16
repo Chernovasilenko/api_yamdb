@@ -1,12 +1,11 @@
 from django.db.models import Avg
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import mixins, viewsets
 
 from .. import permissions
 from . import serializers
 from .filters import TitleFilter
-from .mixins import GenreCategoryMixin, PatchModelMixin
+from .mixins import GenreCategoryMixin, CreateListDestroyPatchMixin
 from reviews.models import Category, Genre, Title, Review
 
 
@@ -24,14 +23,7 @@ class CategoryViewSet(GenreCategoryMixin):
     serializer_class = serializers.CategorySerializer
 
 
-class TitleViewSet(
-    mixins.CreateModelMixin,
-    mixins.ListModelMixin,
-    mixins.RetrieveModelMixin,
-    mixins.DestroyModelMixin,
-    PatchModelMixin,
-    viewsets.GenericViewSet
-):
+class TitleViewSet(CreateListDestroyPatchMixin):
     """Вьюсет для произведений."""
 
     permission_classes = (permissions.IsAdminOrReadOnly,)
@@ -46,14 +38,7 @@ class TitleViewSet(
         return serializers.TitleEditSerializer
 
 
-class ReviewViewSet(
-    mixins.CreateModelMixin,
-    mixins.ListModelMixin,
-    mixins.RetrieveModelMixin,
-    mixins.DestroyModelMixin,
-    PatchModelMixin,
-    viewsets.GenericViewSet
-):
+class ReviewViewSet(CreateListDestroyPatchMixin):
     """Вьюсет отзывов."""
 
     serializer_class = serializers.ReviewSerializer
@@ -75,14 +60,7 @@ class ReviewViewSet(
         )
 
 
-class CommentViewSet(
-    mixins.CreateModelMixin,
-    mixins.ListModelMixin,
-    mixins.RetrieveModelMixin,
-    mixins.DestroyModelMixin,
-    PatchModelMixin,
-    viewsets.GenericViewSet
-):
+class CommentViewSet(CreateListDestroyPatchMixin):
     """Вьюсет комментариев."""
 
     serializer_class = serializers.CommentSerializer
