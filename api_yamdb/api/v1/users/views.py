@@ -10,8 +10,8 @@ from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import AccessToken
 
 from api.v1 import permissions
-from api.v1.reviews import serializers
 from api.v1.reviews.mixins import CreateListDestroyPatchMixin
+from api.v1.users import serializers
 from api_yamdb.settings import EMAIL_DEFAULT_FROM
 
 
