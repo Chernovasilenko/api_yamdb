@@ -2,12 +2,13 @@ from django.contrib.auth import get_user_model
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
+from api.v1.users.mixins import ValidationUsernameMixin
 from core import constants as const
 
 User = get_user_model()
 
 
-class UserSerializer(serializers.ModelSerializer):
+class UserSerializer(serializers.ModelSerializer, ValidationUsernameMixin):
     """Сериализатор для работы с пользователями."""
 
     class Meta:
@@ -21,16 +22,8 @@ class UserSerializer(serializers.ModelSerializer):
             'role'
         )
 
-    def validate_username(self, username):
-        """Проверка на допустимость имени пользователя."""
-        if username == 'me':
-            raise serializers.ValidationError(
-                'Имя пользователя "me" запрещено.'
-            )
-        return username
 
-
-class UserCreateSerializer(serializers.Serializer):
+class UserCreateSerializer(serializers.Serializer, ValidationUsernameMixin):
     """Сериализатор для создания пользователя."""
 
     username = serializers.RegexField(
@@ -42,14 +35,6 @@ class UserCreateSerializer(serializers.Serializer):
         max_length=const.MAX_LENGHT_EMEIL_FIELD,
         required=True
     )
-
-    def validate_username(self, username):
-        """Проверка на допустимость имени пользователя."""
-        if username == 'me':
-            raise serializers.ValidationError(
-                'Имя пользователя "me" запрещено.'
-            )
-        return username
 
     def validate(self, data):
         """Проверка на доступность username и emeil."""
