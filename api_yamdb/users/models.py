@@ -42,15 +42,15 @@ class User(AbstractUser):
             )
         ]
 
+    def __str__(self):
+        return self.username[:const.MAX_STR_LENGTH]
+
     def clean(self):
         super().clean()
         if self.username == 'me':
             raise ValidationError(
                 'Имя пользователя "me" запрещено.'
             )
-
-    def __str__(self):
-        return self.username[:const.MAX_STR_LENGTH]
 
     @property
     def is_admin(self):
