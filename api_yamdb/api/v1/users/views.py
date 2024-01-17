@@ -1,9 +1,9 @@
-from django.core.mail import send_mail
 from django.contrib.auth import get_user_model
 from django.contrib.auth.tokens import default_token_generator
+from django.core.mail import send_mail
 from django.shortcuts import get_object_or_404
-from rest_framework.decorators import api_view, action
-from rest_framework import viewsets, status, mixins
+from rest_framework import status
+from rest_framework.decorators import action, api_view
 from rest_framework.filters import SearchFilter
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -11,20 +11,14 @@ from rest_framework_simplejwt.tokens import AccessToken
 
 from . import serializers
 from .. import permissions
+from api.v1.reviews.mixins import CreateListDestroyPatchMixin
 from api_yamdb.settings import EMAIL_DEFAULT_FROM
-from api.v1.reviews.mixins import PatchModelMixin
+
 
 User = get_user_model()
 
 
-class UserViewSet(
-    mixins.CreateModelMixin,
-    mixins.ListModelMixin,
-    mixins.RetrieveModelMixin,
-    mixins.DestroyModelMixin,
-    PatchModelMixin,
-    viewsets.GenericViewSet
-):
+class UserViewSet(CreateListDestroyPatchMixin):
     """Вьюсет для работы с пользователями."""
 
     queryset = User.objects.all()

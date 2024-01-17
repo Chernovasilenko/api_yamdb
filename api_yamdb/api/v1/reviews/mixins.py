@@ -1,4 +1,4 @@
-from rest_framework import mixins, viewsets, response, filters
+from rest_framework import filters, mixins, response, viewsets
 
 from ..permissions import IsAdminOrReadOnly
 
@@ -21,12 +21,11 @@ class PatchModelMixin:
     """Миксин для PATCH-запроса."""
 
     def partial_update(self, request, *args, **kwargs):
-        partial = True
         instance = self.get_object()
         serializer = self.get_serializer(
             instance,
             data=request.data,
-            partial=partial
+            partial=True
         )
         serializer.is_valid(raise_exception=True)
         self.perform_update(serializer)
@@ -36,3 +35,15 @@ class PatchModelMixin:
 
     def perform_update(self, serializer):
         serializer.save()
+
+
+class CreateListDestroyPatchMixin(
+    mixins.CreateModelMixin,
+    mixins.ListModelMixin,
+    mixins.DestroyModelMixin,
+    PatchModelMixin,
+    viewsets.GenericViewSet,
+):
+    """Миксин для GET, POST, DELETE и PATCH запросов."""
+
+    pass
