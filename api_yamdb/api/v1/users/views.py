@@ -50,6 +50,11 @@ class UserViewSet(CreateListDestroyPatchMixin):
         serializer.save(role=request.user.role)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
+    def get_permissions(self):
+        if self.action in ('get_user_data', 'change_user_data'):
+            return (IsAuthenticated(),)
+        return super().get_permissions()
+
 
 @api_view(('POST',))
 def sign_up(request):
