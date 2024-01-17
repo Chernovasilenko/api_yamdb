@@ -1,6 +1,6 @@
 from rest_framework import filters, mixins, response, viewsets
 
-from ..permissions import IsAdminOrReadOnly
+from api.v1.permissions import IsAdminOrReadOnly
 
 
 class GenreCategoryMixin(

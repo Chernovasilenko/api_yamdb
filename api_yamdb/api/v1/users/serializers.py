@@ -2,7 +2,7 @@ from django.contrib.auth import get_user_model
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
-from .mixins import ValidationUsernameMixin
+from api.v1.users.mixins import ValidationUsernameMixin
 from core import constants as const
 
 User = get_user_model()

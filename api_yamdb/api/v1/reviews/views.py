@@ -2,10 +2,12 @@ from django.db.models import Avg
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 
-from .. import permissions
-from . import serializers
-from .filters import TitleFilter
-from .mixins import GenreCategoryMixin, CreateListDestroyPatchMixin
+from api.v1 import permissions
+from api.v1.reviews import serializers
+from api.v1.reviews.filters import TitleFilter
+from api.v1.reviews.mixins import (
+    CreateListDestroyPatchMixin, GenreCategoryMixin
+)
 from reviews.models import Category, Genre, Title, Review
 
 
