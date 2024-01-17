@@ -40,6 +40,7 @@ class PatchModelMixin:
 class CreateListDestroyPatchMixin(
     mixins.CreateModelMixin,
     mixins.ListModelMixin,
+    mixins.RetrieveModelMixin,
     mixins.DestroyModelMixin,
     PatchModelMixin,
     viewsets.GenericViewSet,
